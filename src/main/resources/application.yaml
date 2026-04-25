@@ -1,0 +1,39 @@
+server:
+  port: 8678
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        max-age: 2592000 # session cookie 30天过期
+
+spring:
+  application:
+    name: chronicle
+  session:
+    store-type: redis
+    timeout: 2592400 # session 30天过期
+  profiles:
+    active: local
+  datasource:
+    url: <your url>
+    username: root
+    password: <your password>
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: <your url>
+      port: 6379
+      password: <your password>
+      database: 0
+
+# springdoc-openapi 配置
+springdoc:
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.cxin.chronicle.controller
+# knife4j 接口文档配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
