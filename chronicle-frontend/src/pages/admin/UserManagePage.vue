@@ -11,121 +11,90 @@
     </div>
 
     <div class="container">
-      <a-card :bordered="false" class="content-card">
+      <div class="content-card">
         <!-- 搜索表单 -->
         <div class="search-section">
-          <a-form layout="inline" :model="searchParams" @finish="doSearch" class="search-form">
-            <a-form-item label="账号">
-              <a-input
-                v-model:value="searchParams.userAccount"
-                placeholder="输入账号"
-                class="search-input"
-              />
-            </a-form-item>
-            <a-form-item label="用户名">
-              <a-input
-                v-model:value="searchParams.userName"
-                placeholder="输入用户名"
-                class="search-input"
-              />
-            </a-form-item>
-            <a-form-item>
-              <a-button type="primary" html-type="submit" class="search-btn">
-                <template #icon>
-                  <SearchOutlined />
-                </template>
+          <van-form @submit="doSearch" class="search-form">
+            <van-field
+              v-model="searchParams.userAccount"
+              name="userAccount"
+              placeholder="输入账号"
+              class="search-input"
+            />
+            <van-field
+              v-model="searchParams.userName"
+              name="userName"
+              placeholder="输入用户名"
+              class="search-input"
+            />
+            <div style="margin: 16px 0;">
+              <van-button round type="primary" native-type="submit" class="search-btn">
+                <van-icon name="search" style="margin-right: 4px;" />
                 搜索
-              </a-button>
-            </a-form-item>
-          </a-form>
+              </van-button>
+            </div>
+          </van-form>
         </div>
 
-        <a-divider />
+        <van-divider />
 
-        <!-- 表格 -->
-        <a-table
-          :columns="columns"
-          :data-source="data"
-          :pagination="pagination"
-          @change="doTableChange"
-          class="user-table"
+        <!-- 列表 -->
+        <van-list
+          :finished="finished"
+          finished-text="没有更多了"
+          @load="onLoad"
+          class="user-list"
         >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.dataIndex === 'userAvatar'">
-              <a-avatar :src="record.userAvatar" :size="48" class="user-avatar" />
-            </template>
-            <template v-else-if="column.dataIndex === 'userRole'">
-              <a-tag v-if="record.userRole === 'admin'" color="purple" class="role-tag">
-                管理员
-              </a-tag>
-              <a-tag v-else color="blue" class="role-tag"> 普通用户 </a-tag>
-            </template>
-            <template v-else-if="column.dataIndex === 'createTime'">
-              <span class="time-text">{{
-                dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss')
-              }}</span>
-            </template>
-            <template v-else-if="column.key === 'action'">
-              <a-popconfirm
+          <div v-for="item in data" :key="item.id" class="user-item">
+            <div class="user-info">
+              <van-image
+                :src="item.userAvatar"
+                width="48"
+                height="48"
+                fit="cover"
+                class="user-avatar"
+              />
+              <div class="user-details">
+                <div class="user-name">{{ item.userName }}</div>
+                <div class="user-account">{{ item.userAccount }}</div>
+                <van-tag v-if="item.userRole === 'admin'" type="primary" class="role-tag">
+                  管理员
+                </van-tag>
+                <van-tag v-else type="success" class="role-tag"> 普通用户 </van-tag>
+              </div>
+            </div>
+            <div class="user-meta">
+              <div class="user-profile">{{ item.userProfile }}</div>
+              <div class="time-text">{{ dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss') }}</div>
+            </div>
+            <div class="user-actions">
+              <van-popconfirm
                 title="确定要删除此用户吗?"
-                ok-text="确定"
-                cancel-text="取消"
-                @confirm="doDelete(record.id)"
+                confirm-button-text="确定"
+                cancel-button-text="取消"
+                @confirm="doDelete(item.id)"
               >
-                <a-button type="link" danger class="delete-btn">删除</a-button>
-              </a-popconfirm>
-            </template>
-          </template>
-        </a-table>
-      </a-card>
+                <template #reference>
+                  <van-button type="danger" size="small" class="delete-btn">删除</van-button>
+                </template>
+              </van-popconfirm>
+            </div>
+          </div>
+        </van-list>
+      </div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { deleteUser, listUserVoByPage } from '@/api/userController.ts'
-import { message } from 'ant-design-vue'
-import { SearchOutlined } from '@ant-design/icons-vue'
+import { showToast } from 'vant'
 import dayjs from 'dayjs'
-
-const columns = [
-  {
-    title: 'id',
-    dataIndex: 'id',
-  },
-  {
-    title: '账号',
-    dataIndex: 'userAccount',
-  },
-  {
-    title: '用户名',
-    dataIndex: 'userName',
-  },
-  {
-    title: '头像',
-    dataIndex: 'userAvatar',
-  },
-  {
-    title: '简介',
-    dataIndex: 'userProfile',
-  },
-  {
-    title: '用户角色',
-    dataIndex: 'userRole',
-  },
-  {
-    title: '创建时间',
-    dataIndex: 'createTime',
-  },
-  {
-    title: '操作',
-    key: 'action',
-  },
-]
 
 // 展示的数据
 const data = ref<API.UserVO[]>([])
 const total = ref(0)
+const finished = ref(false)
 
 // 搜索条件
 const searchParams = reactive<API.UserQueryRequest>({
@@ -142,32 +111,22 @@ const fetchData = async () => {
     data.value = res.data.data.records ?? []
     total.value = res.data.data.total ?? 0
   } else {
-    message.error('获取数据失败，' + res.data.message)
+    showToast({ type: 'fail', message: '获取数据失败，' + res.data.message })
   }
 }
 
-// 分页参数
-const pagination = computed(() => {
-  return {
-    current: searchParams.pageNum ?? 1,
-    pageSize: searchParams.pageSize ?? 10,
-    total: total.value,
-    showSizeChanger: true,
-    showTotal: (total: number) => `共 ${total} 条`,
-  }
-})
-
-// 表格分页变化时的操作
-const doTableChange = (page: { current: number; pageSize: number }) => {
-  searchParams.pageNum = page.current
-  searchParams.pageSize = page.pageSize
-  fetchData()
+// 加载数据（用于 van-list）
+const onLoad = async () => {
+  await fetchData()
+  finished.value = true
 }
 
 // 搜索数据
 const doSearch = () => {
   // 重置页码
   searchParams.pageNum = 1
+  finished.value = false
+  data.value = []
   fetchData()
 }
 
@@ -178,11 +137,11 @@ const doDelete = async (id: string) => {
   }
   const res = await deleteUser({ id })
   if (res.data.code === 0) {
-    message.success('删除成功')
+    showToast({ type: 'success', message: '删除成功' })
     // 刷新数据
     fetchData()
   } else {
-    message.error('删除失败')
+    showToast({ type: 'fail', message: '删除失败' })
   }
 }
 
@@ -238,10 +197,7 @@ onMounted(() => {
     border: 1px solid var(--color-border);
     box-shadow: none;
     background: white;
-
-    :deep(.ant-card-body) {
-      padding: 24px;
-    }
+    padding: 24px;
   }
 
   .search-section {
@@ -253,16 +209,6 @@ onMounted(() => {
     flex-wrap: wrap;
     gap: 12px;
     align-items: flex-end;
-
-    :deep(.ant-form-item) {
-      margin-bottom: 0;
-    }
-
-    :deep(.ant-form-item-label > label) {
-      font-weight: 500;
-      font-size: 13px;
-      color: var(--color-text-secondary);
-    }
   }
 
   .search-input {
@@ -297,34 +243,54 @@ onMounted(() => {
       box-shadow: var(--shadow-green) !important;
       opacity: 0.92;
     }
+  }
 
-    :deep(.ant-wave) {
-      display: none;
+  .user-list {
+    margin-top: 16px;
+  }
+
+  .user-item {
+    padding: 16px;
+    border-bottom: 1px solid var(--color-border-light);
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: rgba(34, 197, 94, 0.02);
     }
   }
 
-  .user-table {
-    :deep(.ant-table-thead > tr > th) {
-      background: var(--color-background-secondary);
-      font-weight: 600;
-      font-size: 13px;
-      color: var(--color-text-secondary);
-      border-bottom: 1px solid var(--color-border);
-      padding: 14px 16px;
-    }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
 
-    :deep(.ant-table-tbody > tr > td) {
-      padding: 16px;
-      border-bottom: 1px solid var(--color-border-light);
-    }
+  .user-details {
+    flex: 1;
+  }
 
-    :deep(.ant-table-tbody > tr:hover > td) {
-      background: rgba(34, 197, 94, 0.02);
-    }
+  .user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-text);
+    margin-bottom: 4px;
+  }
 
-    :deep(.ant-table-pagination) {
-      margin: 16px 0 0;
-    }
+  .user-account {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .user-meta {
+    margin-bottom: 8px;
+  }
+
+  .user-profile {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
   }
 
   .user-avatar {
@@ -335,7 +301,6 @@ onMounted(() => {
     border-radius: var(--radius-full);
     font-weight: 500;
     font-size: 12px;
-    padding: 2px 10px;
   }
 
   .time-text {
@@ -346,12 +311,6 @@ onMounted(() => {
   .delete-btn {
     font-weight: 500;
     font-size: 13px;
-    color: var(--color-error);
-    padding: 4px 8px;
-
-    &:hover {
-      color: #dc2626;
-    }
   }
 }
 
@@ -368,10 +327,6 @@ onMounted(() => {
     .search-form {
       flex-direction: column;
       align-items: stretch;
-
-      :deep(.ant-form-item) {
-        width: 100%;
-      }
     }
 
     .search-input {

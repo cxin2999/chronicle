@@ -12,15 +12,15 @@
           <p class="brand-subtitle">让每个人都能写出 10万+ 文章</p>
           <div class="brand-features">
             <div class="feature-item">
-              <CheckCircleOutlined class="feature-check" />
+              <van-icon name="checked" class="feature-check" />
               <span>智能生成标题与大纲</span>
             </div>
             <div class="feature-item">
-              <CheckCircleOutlined class="feature-check" />
+              <van-icon name="checked" class="feature-check" />
               <span>流式生成高质量正文</span>
             </div>
             <div class="feature-item">
-              <CheckCircleOutlined class="feature-check" />
+              <van-icon name="checked" class="feature-check" />
               <span>自动配图一键导出</span>
             </div>
           </div>
@@ -33,69 +33,62 @@
           <h2 class="form-title">创建账号</h2>
           <p class="form-subtitle">注册开启您的 AI 创作之旅</p>
 
-          <a-form
-            :model="formState"
-            name="basic"
-            autocomplete="off"
-            @finish="handleSubmit"
+          <van-form
+            @submit="handleSubmit"
             class="register-form"
           >
-            <a-form-item name="userAccount" :rules="[{ required: true, message: '请输入账号' }]">
-              <a-input
-                v-model:value="formState.userAccount"
-                placeholder="请输入账号"
-                size="large"
-                class="form-input"
-              >
-                <template #prefix>
-                  <UserOutlined class="input-icon" />
-                </template>
-              </a-input>
-            </a-form-item>
-            <a-form-item
+            <van-field
+              v-model="formState.userAccount"
+              name="userAccount"
+              placeholder="请输入账号"
+              :rules="[{ required: true, message: '请输入账号' }]"
+              size="large"
+              class="form-input"
+            >
+              <template #left-icon>
+                <van-icon name="user" class="input-icon" />
+              </template>
+            </van-field>
+            <van-field
+              v-model="formState.userPassword"
+              type="password"
               name="userPassword"
+              placeholder="请输入密码"
               :rules="[
                 { required: true, message: '请输入密码' },
-                { min: 8, message: '密码不能小于 8 位' },
+                { pattern: /^.{8,}$/, message: '密码不能小于 8 位' },
               ]"
+              size="large"
+              class="form-input"
             >
-              <a-input-password
-                v-model:value="formState.userPassword"
-                placeholder="请输入密码"
-                size="large"
-                class="form-input"
-              >
-                <template #prefix>
-                  <LockOutlined class="input-icon" />
-                </template>
-              </a-input-password>
-            </a-form-item>
-            <a-form-item
+              <template #left-icon>
+                <van-icon name="lock" class="input-icon" />
+              </template>
+            </van-field>
+            <van-field
+              v-model="formState.checkPassword"
+              type="password"
               name="checkPassword"
+              placeholder="请确认密码"
               :rules="[
                 { required: true, message: '请确认密码' },
-                { min: 8, message: '密码不能小于 8 位' },
+                { pattern: /^.{8,}$/, message: '密码不能小于 8 位' },
                 { validator: validateCheckPassword },
               ]"
+              size="large"
+              class="form-input"
             >
-              <a-input-password
-                v-model:value="formState.checkPassword"
-                placeholder="请确认密码"
-                size="large"
-                class="form-input"
-              >
-                <template #prefix>
-                  <SafetyOutlined class="input-icon" />
-                </template>
-              </a-input-password>
-            </a-form-item>
+              <template #left-icon>
+                <van-icon name="shield-o" class="input-icon" />
+              </template>
+            </van-field>
 
-            <a-form-item>
-              <a-button type="primary" html-type="submit" size="large" block class="submit-btn">
+            <div style="margin: 16px 0;">
+              <van-button round block type="primary" native-type="submit" size="large" class="submit-btn">
                 注册
-              </a-button>
-            </a-form-item>
-          </a-form>
+              </van-button>
+            </div>
+          </van-form>
 
           <div class="form-footer">
             <span class="footer-text">已有账号？</span>
@@ -110,14 +103,8 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { userRegister } from '@/api/userController.ts'
-import { message } from 'ant-design-vue'
+import { showToast } from 'vant'
 import { reactive } from 'vue'
-import {
-  UserOutlined,
-  LockOutlined,
-  SafetyOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons-vue'
 
 const router = useRouter()
 
@@ -133,12 +120,11 @@ const formState = reactive<API.UserRegisterRequest>({
  * @param value
  * @param callback
  */
-const validateCheckPassword = (rule: unknown, value: string, callback: (error?: Error) => void) => {
+const validateCheckPassword = (value: string) => {
   if (value && value !== formState.userPassword) {
-    callback(new Error('两次输入密码不一致'))
-  } else {
-    callback()
+    return '两次输入密码不一致'
   }
+  return true
 }
 
 /**
@@ -149,13 +135,13 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   const res = await userRegister(values)
   // 注册成功，跳转到登录页面
   if (res.data.code === 0) {
-    message.success('注册成功')
+    showToast({ type: 'success', message: '注册成功' })
     router.push({
       path: '/user/login',
       replace: true,
     })
   } else {
-    message.error('注册失败，' + res.data.message)
+    showToast({ type: 'fail', message: '注册失败，' + res.data.message })
   }
 }
 </script>
@@ -331,7 +317,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
-.form-input :deep(.ant-input) {
+.form-input :deep(.van-field__control) {
   padding: 12px 14px;
 }
 
@@ -360,10 +346,6 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   color: white !important;
   box-shadow: var(--shadow-green) !important;
   opacity: 0.92;
-}
-
-.submit-btn :deep(.ant-wave) {
-  display: none;
 }
 
 .form-footer {

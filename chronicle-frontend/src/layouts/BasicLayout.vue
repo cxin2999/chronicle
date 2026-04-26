@@ -1,12 +1,12 @@
 <template>
-  <a-layout class="basic-layout">
-    <a-layout-content class="main-content">
+  <div class="basic-layout">
+    <div class="main-content">
       <router-view />
-    </a-layout-content>
+    </div>
 
     <!-- 底部版权信息 -->
     <GlobalFooter />
-  </a-layout>
+  </div>
 </template>
 
 <script setup lang="ts">

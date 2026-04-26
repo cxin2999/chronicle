@@ -7,50 +7,45 @@
           <h2 class="form-title">欢迎回来</h2>
           <p class="form-subtitle">登录您的账号</p>
 
-          <a-form
-            :model="formState"
-            name="basic"
-            autocomplete="off"
-            @finish="handleSubmit"
+          <van-form
+            @submit="handleSubmit"
             class="login-form"
           >
-            <a-form-item name="userAccount" :rules="[{ required: true, message: '请输入账号' }]">
-              <a-input
-                v-model:value="formState.userAccount"
-                placeholder="请输入账号"
-                size="large"
-                class="form-input"
-              >
-                <template #prefix>
-                  <UserOutlined class="input-icon" />
-                </template>
-              </a-input>
-            </a-form-item>
-            <a-form-item
+            <van-field
+              v-model="formState.userAccount"
+              name="userAccount"
+              placeholder="请输入账号"
+              :rules="[{ required: true, message: '请输入账号' }]"
+              size="large"
+              class="form-input"
+            >
+              <template #left-icon>
+                <van-icon name="user" class="input-icon" />
+              </template>
+            </van-field>
+            <van-field
+              v-model="formState.userPassword"
+              type="password"
               name="userPassword"
+              placeholder="请输入密码"
               :rules="[
                 { required: true, message: '请输入密码' },
-                { min: 8, message: '密码长度不能小于 8 位' },
+                { pattern: /^.{8,}$/, message: '密码长度不能小于 8 位' },
               ]"
+              size="large"
+              class="form-input"
             >
-              <a-input-password
-                v-model:value="formState.userPassword"
-                placeholder="请输入密码"
-                size="large"
-                class="form-input"
-              >
-                <template #prefix>
-                  <LockOutlined class="input-icon" />
-                </template>
-              </a-input-password>
-            </a-form-item>
+              <template #left-icon>
+                <van-icon name="lock" class="input-icon" />
+              </template>
+            </van-field>
 
-            <a-form-item>
-              <a-button type="primary" style="color: #0F172A" html-type="submit" size="large" block class="submit-btn">
+            <div style="margin: 16px 0;">
+              <van-button round block type="primary" native-type="submit" size="large" class="submit-btn">
                 登录
-              </a-button>
-            </a-form-item>
-          </a-form>
+              </van-button>
+            </div>
+          </van-form>
 
           <div class="form-footer">
             <span class="footer-text">还没有账号？</span>
@@ -67,8 +62,7 @@ import { reactive } from 'vue'
 import { userLogin } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
-import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
+import { showToast } from 'vant'
 
 const formState = reactive<API.UserLoginRequest>({
   userAccount: '',
@@ -82,18 +76,18 @@ const loginUserStore = useLoginUserStore()
  * 提交表单
  * @param values
  */
-const handleSubmit = async (values: any) => {
+const handleSubmit = async (values: API.UserLoginRequest) => {
   const res = await userLogin(values)
   // 登录成功，把登录态保存到全局状态中
   if (res.data.code === 0 && res.data.data) {
     await loginUserStore.fetchLoginUser()
-    message.success('登录成功')
+    showToast({ type: 'success', message: '登录成功' })
     router.push({
       path: '/',
       replace: true,
     })
   } else {
-    message.error('登录失败，' + res.data.message)
+    showToast({ type: 'fail', message: '登录失败，' + res.data.message })
   }
 }
 </script>
@@ -269,7 +263,7 @@ const handleSubmit = async (values: any) => {
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
-.form-input :deep(.ant-input) {
+.form-input :deep(.van-field__control) {
   padding: 12px 14px;
 }
 
@@ -285,7 +279,7 @@ const handleSubmit = async (values: any) => {
   border-radius: var(--radius-lg);
   background: var(--gradient-primary) !important;
   border: none !important;
-  color: #000000 !important;
+  color: white !important;
   box-shadow: var(--shadow-green) !important;
   transition: opacity var(--transition-normal) !important;
 }
@@ -298,10 +292,6 @@ const handleSubmit = async (values: any) => {
   color: white !important;
   box-shadow: var(--shadow-green) !important;
   opacity: 0.92;
-}
-
-.submit-btn :deep(.ant-wave) {
-  display: none;
 }
 
 .form-footer {
@@ -352,4 +342,3 @@ const handleSubmit = async (values: any) => {
     font-size: 22px;
   }
 }
-</style>

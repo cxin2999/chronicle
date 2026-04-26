@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { API_BASE_URL } from '@/config/env.ts'
-import { message } from 'ant-design-vue'
+import { showToast } from 'vant'
 
 // 创建 Axios 实例
 const myAxios = axios.create({
@@ -19,7 +19,7 @@ myAxios.interceptors.response.use(
         !response.request.responseURL.includes('user/get/login') &&
         !window.location.pathname.includes('/user/login')
       ) {
-        message.warning('登录已过期，请重新登录')
+        showToast({ type: 'fail', message: '登录已过期，请重新登录' })
         window.location.href = `/user/login?redirect=${window.location.href}`
       }
     }

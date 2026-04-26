@@ -5,6 +5,18 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseListEntriesVo = {
+    code?: number
+    data?: EntriesVo[]
+    message?: string
+  }
+
+  type BaseResponseListHeatmapDataVo = {
+    code?: number
+    data?: HeatmapDataVo[]
+    message?: string
+  }
+
   type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
@@ -39,12 +51,53 @@ declare namespace API {
     id: string
   }
 
+  type EntriesAddReq = {
+    content: string
+    entryType?: string
+  }
+
+  type EntriesQueryReq = {
+    /** 记录日期（格式：yyyy-MM-dd） */
+    date: string
+  }
+
+  type EntriesUpdateCheckedReq = {
+    /** 记录ID */
+    id: string
+    /** 是否勾选 0-未勾选 1-已勾选 */
+    checked: string
+  }
+
+  type EntriesVo = {
+    /** id */
+    id?: string
+    /** 用户ID */
+    userId?: string
+    /** 记录内容 */
+    content?: string
+    /** 记录类型 枚举值:Done/Todo/Idea/Think/Rule */
+    entryType?: string
+    /** 是否勾选 */
+    checked?: string
+    /** 创建时间 */
+    createTime?: string
+    /** 更新时间 */
+    updateTime?: string
+  }
+
   type getUserParams = {
     id: string
   }
 
   type getUserVOParams = {
     id: string
+  }
+
+  type HeatmapDataVo = {
+    /** 日期（格式：yyyy-MM-dd） */
+    date?: string
+    /** 记录数量 */
+    count?: number
   }
 
   type LoginUserVO = {
@@ -75,6 +128,11 @@ declare namespace API {
     maxLimit?: number
     countId?: string
     pages?: number
+  }
+
+  type queryHeatmapDataParams = {
+    startDate: string
+    endDate: string
   }
 
   type User = {

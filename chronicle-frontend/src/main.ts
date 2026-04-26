@@ -1,15 +1,15 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import Vant from 'vant'
+import 'vant/lib/index.css'
 
 import App from './App.vue'
 import router from './router'
-import 'dayjs/locale/zh-cn'
-import Antd from 'ant-design-vue'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
-app.use(Antd)
+app.use(Vant)
 
 app.mount('#app')
