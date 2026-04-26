@@ -8,22 +8,8 @@
           <div class="brand-logo">
             <img src="@/assets/logo.png" alt="Logo" class="logo-img" />
           </div>
-          <h1 class="brand-title">AI 爆款文章创作器</h1>
-          <p class="brand-subtitle">让每个人都能写出 10万+ 文章</p>
-          <div class="brand-features">
-            <div class="feature-item">
-              <van-icon name="checked" class="feature-check" />
-              <span>智能生成标题与大纲</span>
-            </div>
-            <div class="feature-item">
-              <van-icon name="checked" class="feature-check" />
-              <span>流式生成高质量正文</span>
-            </div>
-            <div class="feature-item">
-              <van-icon name="checked" class="feature-check" />
-              <span>自动配图一键导出</span>
-            </div>
-          </div>
+          <h1 class="brand-title">Chronicle</h1>
+          <p class="brand-subtitle">沉淀思考 量化行动</p>
         </div>
       </div>
 
@@ -31,12 +17,9 @@
       <div class="form-section">
         <div class="form-card">
           <h2 class="form-title">创建账号</h2>
-          <p class="form-subtitle">注册开启您的 AI 创作之旅</p>
+          <p class="form-subtitle">注册开启您成长记录</p>
 
-          <van-form
-            @submit="handleSubmit"
-            class="register-form"
-          >
+          <van-form @submit="handleSubmit" class="register-form">
             <van-field
               v-model="formState.userAccount"
               name="userAccount"
@@ -83,8 +66,15 @@
               </template>
             </van-field>
 
-            <div style="margin: 16px 0;">
-              <van-button round block type="primary" native-type="submit" size="large" class="submit-btn">
+            <div style="margin: 16px 0">
+              <van-button
+                round
+                block
+                type="primary"
+                native-type="submit"
+                size="large"
+                class="submit-btn"
+              >
                 注册
               </van-button>
             </div>

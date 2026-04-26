@@ -1,0 +1,87 @@
+// @ts-ignore
+/* eslint-disable */
+import request from '@/request'
+
+/** 添加记录 POST /entries/add */
+export async function createArticle(body: API.EntriesAddReq, options?: { [key: string]: any }) {
+  return request<API.BaseResponseBoolean>('/entries/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 查询日记录 POST /entries/query/daily */
+export async function queryDailyEntries(
+  body: API.EntriesQueryReq,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseListEntriesVo>('/entries/query/daily', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 查询热力图数据 POST /entries/query/heatmap */
+export async function queryHeatmapData(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.queryHeatmapDataParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseListHeatmapDataVo>('/entries/query/heatmap', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
+/** 更新记录勾选状态 POST /entries/update/checked */
+export async function updateChecked(
+  body: API.EntriesUpdateCheckedReq,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/entries/update/checked', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 删除记录 POST /entries/delete */
+export async function deleteEntry(body: API.DeleteRequest, options?: { [key: string]: any }) {
+  return request<API.BaseResponseBoolean>('/entries/delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 更新记录内容和类型 POST /entries/update/content-and-type */
+export async function updateContentAndType(
+  body: API.EntriesUpdateContentAndTypeReq,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/entries/update/content-and-type', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
