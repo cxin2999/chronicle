@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS entries
     id         bigint PRIMARY KEY AUTO_INCREMENT COMMENT 'id',
     userId     bigint                             not null comment '用户ID',
     content    varchar(512)                       NOT NULL COMMENT '记录内容',
-    entryType  varchar(20)                        NOT NULL COMMENT '记录类型 枚举值:Done\Todo\Idea\Think\Rule',
+    entryType  varchar(20)                        NOT NULL COMMENT '记录类型 枚举值:Do\Idea\Think\Rule',
     checked    tinyint  default 0                 not null comment '是否勾选',
     createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',

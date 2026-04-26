@@ -8,7 +8,7 @@ import lombok.Data;
 public class EntriesAddReq {
     @NotBlank(message = "内容不能为空")
     private String content;
-    @ValidEntryType(message = "记录类型无效，可选值：Done, Todo, Idea, Think, Rule")
+    @ValidEntryType(message = "记录类型无效，可选值：Do, Idea, Think, Rule")
     private String entryType;
 }
 

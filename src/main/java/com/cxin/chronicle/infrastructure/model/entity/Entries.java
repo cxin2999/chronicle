@@ -27,7 +27,7 @@ public class Entries implements Serializable {
     /**
      * id
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
     private String id;
 
     /**
@@ -43,7 +43,7 @@ public class Entries implements Serializable {
     private String content;
 
     /**
-     * 记录类型 枚举值:DoneTodoIdeaThinkRule
+     * 记录类型
      */
     @TableField("entryType")
     private String entryType;

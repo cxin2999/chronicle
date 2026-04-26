@@ -5,8 +5,7 @@ import lombok.Getter;
 
 @Getter
 public enum EntryTypeEnum {
-    Done("Done", "完成"),
-    Todo("Todo", "待办"),
+    Done("Do", "事项"),
     Idea("Idea", "想法"),
     Think("Think", "思考"),
     Rule("Rule", "原则");

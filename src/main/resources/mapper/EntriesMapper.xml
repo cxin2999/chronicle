@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxin.chronicle.mapper.EntriesMapper">
+
+    <!-- 查询热力图数据 -->
+    <select id="queryHeatmapData" resultType="com.cxin.chronicle.infrastructure.model.vo.HeatmapDataVo">
+        SELECT DATE (createTime) as date, COUNT (*) as count
+        FROM entries
+        WHERE userId = #{userId}
+          AND YEAR (createTime) = #{year}
+          AND isDelete = 0
+        GROUP BY DATE (createTime)
+        ORDER BY date ASC
+    </select>
+
+</mapper>
