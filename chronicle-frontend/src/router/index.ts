@@ -1,4 +1,6 @@
-import HomePage from '@/pages/HomePage.vue'
+import RecordPage from '@/pages/RecordPage.vue'
+import HistoryPage from '@/pages/HistoryPage.vue'
+import ProfilePage from '@/pages/ProfilePage.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import UserLoginPage from '@/pages/user/UserLoginPage.vue'
 import UserRegisterPage from '@/pages/user/UserRegisterPage.vue'
@@ -9,8 +11,22 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: '主页',
-      component: HomePage,
+      redirect: '/record',
+    },
+    {
+      path: '/record',
+      name: '记录',
+      component: RecordPage,
+    },
+    {
+      path: '/history',
+      name: '历史',
+      component: HistoryPage,
+    },
+    {
+      path: '/profile',
+      name: '我的',
+      component: ProfilePage,
     },
     {
       path: '/user/login',
@@ -25,9 +41,10 @@ const router = createRouter({
     {
       path: '/admin/userManage',
       name: '用户管理',
-      component:UserManagePage,
+      component: UserManagePage,
     },
   ],
 })
 
 export default router
+

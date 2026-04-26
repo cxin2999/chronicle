@@ -3,15 +3,10 @@
     <div class="main-content">
       <router-view />
     </div>
-
-    <!-- 底部版权信息 -->
-    <GlobalFooter />
   </div>
 </template>
 
-<script setup lang="ts">
-import GlobalFooter from '@/components/GlobalFooter.vue'
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .basic-layout {
@@ -25,3 +20,4 @@ import GlobalFooter from '@/components/GlobalFooter.vue'
   margin: 0;
 }
 </style>
+

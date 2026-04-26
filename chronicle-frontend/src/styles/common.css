@@ -48,6 +48,102 @@
   text-align: center;
 }
 
+/* ==================== 移动端页面基础布局 ==================== */
+
+/* 占满 viewport 高度 */
+.mobile-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+/* 通用页面头部 */
+.page-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3.25rem;
+  padding: 0 1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.page-header__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 可滚动内容区 */
+.page-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==================== 记录类型 Pill 选择器 ==================== */
+
+.type-pills {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.type-pill {
+  flex: 1;
+  height: 1.875rem;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--pill-color, #e2e8f0);
+  background: transparent;
+  color: var(--pill-color, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.type-pill.active {
+  background: var(--pill-color, #22c55e);
+  border-color: var(--pill-color, #22c55e);
+  color: #fff;
+}
+
+/* ==================== 记录条目样式 ==================== */
+
+.entry-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  min-height: 2.75rem;
+}
+
+.entry-content {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.entry-content.is-checked {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* ==================== 适配平板 ==================== */
+
+@media (max-width: 768px) {
+  .mobile-page {
+    height: 100dvh;
+  }
+}
+
+
 .empty-state .empty-icon {
   font-size: 48px;
   color: var(--color-text-muted);

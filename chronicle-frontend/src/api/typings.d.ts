@@ -68,6 +68,15 @@ declare namespace API {
     checked: string
   }
 
+  type EntriesUpdateContentAndTypeReq = {
+    /** 记录ID */
+    id: string
+    /** 记录内容 */
+    content: string
+    /** 记录类型 枚举值:Do/Idea/Think/Rule */
+    entryType: string
+  }
+
   type EntriesVo = {
     /** id */
     id?: string
@@ -75,7 +84,7 @@ declare namespace API {
     userId?: string
     /** 记录内容 */
     content?: string
-    /** 记录类型 枚举值:Done/Todo/Idea/Think/Rule */
+    /** 记录类型 枚举值:Do/Idea/Think/Rule */
     entryType?: string
     /** 是否勾选 */
     checked?: string
@@ -131,8 +140,7 @@ declare namespace API {
   }
 
   type queryHeatmapDataParams = {
-    startDate: string
-    endDate: string
+    year: string
   }
 
   type User = {

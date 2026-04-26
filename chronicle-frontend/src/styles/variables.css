@@ -76,4 +76,17 @@
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
   --breakpoint-2xl: 1400px;
+
+  /* 记录类型颜色 */
+  --color-entry-do: #F59E0B;
+  --color-entry-do-bg: rgba(245, 158, 11, 0.12);
+  --color-entry-idea: #8B5CF6;
+  --color-entry-idea-bg: rgba(139, 92, 246, 0.12);
+  --color-entry-think: #22C55E;
+  --color-entry-think-bg: rgba(34, 197, 94, 0.12);
+  --color-entry-rule: #F97316;
+  --color-entry-rule-bg: rgba(249, 115, 22, 0.12);
+
+  /* 底部导航栏 */
+  --tabbar-height: 3.125rem;
 }

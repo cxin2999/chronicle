@@ -2,7 +2,7 @@
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 import router from '@/router'
 import { USER_ROLE_ADMIN } from '@/constants/user.ts'
-import { message } from 'ant-design-vue'
+import { showToast } from 'vant'
 
 let firstFetchLoginUser = true
 
@@ -24,7 +24,7 @@ router.beforeEach(async (to, from, next) => {
   // 管理员页面权限校验
   if (toUrl.startsWith('/admin')) {
     if (!loginUser || loginUser.userRole !== USER_ROLE_ADMIN) {
-      message.error('没有权限')
+      showToast({ type: 'fail', message: '没有权限' })
       next(`/user/login?redirect=${to.fullPath}`)
       return
     }
