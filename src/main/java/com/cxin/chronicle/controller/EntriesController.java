@@ -38,7 +38,7 @@ public class EntriesController {
     @PostMapping("/add")
     @Operation(summary = "添加记录")
     @AuthCheck(mustRole = UserConstant.DEFAULT_ROLE)
-    public BaseResponse<Boolean> createArticle(@RequestBody @Valid EntriesAddReq request, HttpServletRequest httpServletRequest) {
+    public BaseResponse<Boolean> addEntry(@RequestBody @Valid EntriesAddReq request, HttpServletRequest httpServletRequest) {
         User loginUser = userService.getCurrentUser(httpServletRequest);
         Boolean added = entriesService.addEntries(loginUser, request);
         return ResultUtils.success(added);
@@ -91,5 +91,14 @@ public class EntriesController {
         User loginUser = userService.getCurrentUser(httpServletRequest);
         Boolean deleted = entriesService.deleteEntry(loginUser, request);
         return ResultUtils.success(deleted);
+    }
+
+    @PostMapping("/query/history")
+    @Operation(summary = "游标分页查询历史记录")
+    @AuthCheck(mustRole = UserConstant.DEFAULT_ROLE)
+    public BaseResponse<List<EntriesVo>> queryHistoryEntries(@RequestBody EntriesHistoryReq request, HttpServletRequest httpServletRequest) {
+        User loginUser = userService.getCurrentUser(httpServletRequest);
+        List<EntriesVo> entriesVoList = entriesService.queryHistoryWithCursor(loginUser, request);
+        return ResultUtils.success(entriesVoList);
     }
 }

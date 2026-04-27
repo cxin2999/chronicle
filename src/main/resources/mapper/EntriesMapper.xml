@@ -4,13 +4,26 @@
 
     <!-- 查询热力图数据 -->
     <select id="queryHeatmapData" resultType="com.cxin.chronicle.infrastructure.model.vo.HeatmapDataVo">
-        SELECT DATE (createTime) as date, COUNT (*) as count
+        SELECT DATE(createTime) as date, COUNT(*) as count
         FROM entries
         WHERE userId = #{userId}
-          AND YEAR (createTime) = #{year}
+          AND YEAR(createTime) = #{year}
           AND isDelete = 0
-        GROUP BY DATE (createTime)
+        GROUP BY DATE(createTime)
         ORDER BY date ASC
+    </select>
+
+    <!-- 游标分页查询历史记录 -->
+    <select id="queryHistoryWithCursor" resultType="com.cxin.chronicle.infrastructure.model.entity.Entries">
+        SELECT *
+        FROM entries
+        WHERE userId = #{userId}
+          AND isDelete = 0
+          <if test="lastCreateTime != null">
+              AND createTime &lt; #{lastCreateTime}
+          </if>
+        ORDER BY createTime DESC, id DESC
+        LIMIT #{pageSize}
     </select>
 
 </mapper>

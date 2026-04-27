@@ -3,7 +3,7 @@
 import request from '@/request'
 
 /** 添加记录 POST /entries/add */
-export async function createArticle(body: API.EntriesAddReq, options?: { [key: string]: any }) {
+export async function addEntry(body: API.EntriesAddReq, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/entries/add', {
     method: 'POST',
     headers: {
@@ -52,6 +52,21 @@ export async function queryHeatmapData(
     params: {
       ...params,
     },
+    ...(options || {}),
+  })
+}
+
+/** 游标分页查询历史记录 POST /entries/query/history */
+export async function queryHistoryEntries(
+  body: API.EntriesHistoryReq,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseListEntriesVo>('/entries/query/history', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   })
 }

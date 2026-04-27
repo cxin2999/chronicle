@@ -58,4 +58,13 @@ public interface EntriesService extends IService<Entries> {
      * @return 是否删除成功
      */
     boolean deleteEntry(User loginUser, EntriesDeleteReq request);
+
+    /**
+     * 游标分页查询历史记录
+     *
+     * @param loginUser 登录用户
+     * @param request   分页请求
+     * @return 记录列表
+     */
+    List<EntriesVo> queryHistoryWithCursor(User loginUser, EntriesHistoryReq request);
 }

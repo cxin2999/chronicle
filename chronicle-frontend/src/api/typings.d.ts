@@ -61,6 +61,13 @@ declare namespace API {
     id: string
   }
 
+  type EntriesHistoryReq = {
+    /** 每页大小，默认为 10 */
+    pageSize?: number
+    /** 上一页最后一条记录的创建时间（首次请求不传） */
+    lastCreateTime?: string
+  }
+
   type EntriesQueryReq = {
     /** 记录日期（格式：yyyy-MM-dd） */
     date: string
@@ -70,7 +77,7 @@ declare namespace API {
     /** 记录ID */
     id: string
     /** 是否勾选 0-未勾选 1-已勾选 */
-    checked: number
+    checked?: number
   }
 
   type EntriesUpdateContentAndTypeReq = {

@@ -23,24 +23,107 @@
       />
     </header>
 
-    <!-- 中间：当日记录 -->
-    <main class="page-body record-page__body">
-      <div class="record-page__date-label">
-        <div class="date-label__left">
-          <van-icon name="calendar-o" size="0.875rem" />
-          <span>{{ dateLabel }}</span>
+    <!-- 中间：无限滚动记录列表（最新在底部，历史在上方） -->
+    <main
+      class="page-body record-page__body"
+      ref="scrollContainerRef"
+    >
+      <van-pull-refresh
+        v-model="refreshing"
+        @refresh="onRefresh"
+        class="record-page__pull-refresh"
+      >
+        <!-- 初始加载中 -->
+        <div v-if="loading" class="list-center-tip">
+          <van-loading size="1.5rem" color="var(--color-primary)" />
         </div>
-        <div class="date-label__stats">
-          <span
-            v-for="t in entryCounts"
-            :key="t.value"
-            class="entry-stat-tag"
-            :style="{ background: t.bgColor, color: t.color }"
-            >{{ t.label }}&nbsp;{{ t.count }}</span
+
+        <template v-else>
+          <!--
+            van-list direction="up"：
+            当滚动容器 scrollTop 接近 0 (offset 范围内) 时自动触发 load 事件，
+            并将 v-model:loading 设为 true；
+            scroller 指定真实滚动容器（main.record-page__body）。
+          -->
+          <van-list
+            v-model:loading="loadingMore"
+            :finished="noMoreHistory"
+            direction="up"
+            :scroller="scrollContainerRef || undefined"
+            :immediate-check="false"
+            :offset="80"
+            class="record-page__list"
+            @load="loadOlderEntries"
           >
-        </div>
-      </div>
-      <DailyEntries :date="today" ref="dailyEntriesRef" />
+            <!-- 自定义加载中提示（顶部） -->
+            <template #loading>
+              <div class="load-more-tip">
+                <van-loading size="1rem" color="#94a3b8" />
+                <span>加载历史中...</span>
+              </div>
+            </template>
+
+            <!-- 自定义全部加载完毕提示（顶部） -->
+            <template #finished>
+              <div class="no-more-tip">· 已加载全部历史记录 ·</div>
+            </template>
+
+            <!-- 空状态 -->
+            <div v-if="entries.length === 0" class="list-center-tip">
+              <van-empty description="暂无记录" image-size="5rem" />
+            </div>
+
+            <!-- 按日期分组渲染所有记录 -->
+            <template v-for="(entry, index) in entries" :key="entry.id">
+              <!-- 日期分组标题 -->
+              <div v-if="shouldShowDateHeader(index)" class="date-group-header">
+                <span class="date-group-header__line" />
+                <span class="date-group-header__label">{{ formatEntryDate(entry.createTime) }}</span>
+                <span class="date-group-header__line" />
+              </div>
+
+              <!-- 记录条目（左滑删除） -->
+              <van-swipe-cell class="entry-swipe-cell">
+                <div class="entry-item" @click="openEdit(entry)">
+                  <van-checkbox
+                    v-if="entry.entryType === 'Do'"
+                    :model-value="entry.checked === 1"
+                    shape="square"
+                    icon-size="1.125rem"
+                    :checked-color="getEntryType('Do').color"
+                    @click.stop
+                    @update:model-value="(val: boolean) => handleToggleChecked(entry, val)"
+                  />
+                  <span
+                    class="entry-content"
+                    :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === 1 }"
+                  >
+                    {{ entry.content }}
+                  </span>
+                  <van-tag
+                    class="entry-type-tag"
+                    :style="{
+                      background: getEntryType(entry.entryType ?? '').bgColor,
+                      color: getEntryType(entry.entryType ?? '').color,
+                    }"
+                  >
+                    {{ entry.entryType }}
+                  </van-tag>
+                </div>
+                <template #right>
+                  <van-button
+                    square
+                    type="danger"
+                    text="删除"
+                    class="entry-delete-btn"
+                    @click="handleDelete(entry)"
+                  />
+                </template>
+              </van-swipe-cell>
+            </template>
+          </van-list>
+        </template>
+      </van-pull-refresh>
     </main>
 
     <!-- 底部：输入区域 -->
@@ -81,40 +164,172 @@
         />
       </div>
     </footer>
+
+    <!-- 编辑底部弹层（从 DailyEntries 迁移） -->
+    <van-popup
+      v-model:show="editVisible"
+      position="bottom"
+      round
+      :style="{ padding: '1.25rem 1rem 2rem' }"
+    >
+      <div class="edit-popup">
+        <div class="edit-popup__title">编辑记录</div>
+
+        <div class="type-pills" style="margin-bottom: 0.875rem">
+          <button
+            v-for="t in ENTRY_TYPES"
+            :key="t.value"
+            class="type-pill"
+            :class="{ active: editForm.entryType === t.value }"
+            :style="{ '--pill-color': t.color }"
+            @click="editForm.entryType = t.value"
+          >
+            {{ t.label }}
+          </button>
+        </div>
+
+        <van-field
+          v-model="editForm.content"
+          type="textarea"
+          :placeholder="currentEditPlaceholder"
+          rows="4"
+          :border="false"
+          maxlength="200"
+          show-word-limit
+          class="edit-popup__field"
+          autosize
+        />
+
+        <van-button
+          block
+          type="primary"
+          :loading="saving"
+          :color="currentEditColor"
+          style="margin-top: 0.875rem; border-radius: var(--radius-lg)"
+          @click="submitEdit"
+        >
+          保存
+        </van-button>
+      </div>
+    </van-popup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { createArticle } from '@/api/entriesController'
-import DailyEntries from '@/components/DailyEntries.vue'
-import { ENTRY_TYPES } from '@/constants/entries'
+import {
+  addEntry,
+  deleteEntry,
+  queryDailyEntries,
+  queryHistoryEntries,
+  updateChecked,
+  updateContentAndType,
+} from '@/api/entriesController'
+import { ENTRY_TYPES, getEntryType } from '@/constants/entries'
 import defaultAvatar from '@/assets/default_avatar.png'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 const loginUser = computed(() => loginUserStore.loginUser)
 
-// 今天的日期
-const today = new Date()
-  .toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-  .replace(/\//g, '-')
+// =========== 列表状态 ===========
+const PAGE_SIZE = 20
+const entries = ref<API.EntriesVo[]>([]) // 按时间正序（旧→新）排列
+const loading = ref(false)
+const loadingMore = ref(false)
+const noMoreHistory = ref(false)
+const refreshing = ref(false)
+const scrollContainerRef = ref<HTMLElement | null>(null)
 
-const dateLabel = new Date().toLocaleDateString('zh-CN', {
-  month: 'long',
-  day: 'numeric',
-  weekday: 'short',
-})
+// =========== 工具函数 ===========
+function sortAsc(data: API.EntriesVo[]): API.EntriesVo[] {
+  return [...data].sort(
+    (a, b) => new Date(a.createTime!).getTime() - new Date(b.createTime!).getTime(),
+  )
+}
 
-// 当前选中类型
+function scrollToBottom() {
+  const el = scrollContainerRef.value
+  if (el) el.scrollTop = el.scrollHeight
+}
+
+// =========== 初始化加载 ===========
+async function loadInitial() {
+  loading.value = true
+  noMoreHistory.value = false
+  try {
+    const res = await queryHistoryEntries({ pageSize: PAGE_SIZE })
+    if (res.data.code === 0 && res.data.data) {
+      entries.value = sortAsc(res.data.data)
+      if (res.data.data.length < PAGE_SIZE) noMoreHistory.value = true
+    }
+  } finally {
+    loading.value = false
+    await nextTick()
+    scrollToBottom()
+  }
+}
+
+// =========== 向上加载历史数据（prepend） ===========
+// 由 van-list direction="up" 触发，触发时 loadingMore 已被 van-list 设为 true
+async function loadOlderEntries() {
+  if (noMoreHistory.value || entries.value.length === 0) {
+    loadingMore.value = false
+    return
+  }
+
+  const el = scrollContainerRef.value
+  // 在任何 await 之前同步捕获高度（loading slot 尚未渲染到 DOM）
+  const prevScrollHeight = el?.scrollHeight ?? 0
+  const cursor = entries.value[0]?.createTime
+
+  try {
+    const res = await queryHistoryEntries({ pageSize: PAGE_SIZE, lastCreateTime: cursor })
+    if (res.data.code === 0 && res.data.data) {
+      const older = sortAsc(res.data.data)
+      if (older.length < PAGE_SIZE) noMoreHistory.value = true
+      if (older.length > 0) {
+        // 关键：在同一同步块内同时更新数据并关闭 loading，
+        // Vue 会把「新增条目」+「移除 loading slot」合并到同一次 nextTick 渲染，
+        // 使得 scrollHeight 的增量 = 纯新增条目高度，loading slot 的高度变化相互抵消。
+        entries.value = [...older, ...entries.value]
+        loadingMore.value = false
+        await nextTick()
+        if (el) el.scrollTop += el.scrollHeight - prevScrollHeight
+        return // 正常退出，跳过 finally 中的重复赋值
+      }
+    }
+  } catch {
+    // 异常不影响后续 finally 清理
+  } finally {
+    // 兜底：防止异常或数据为空时 loadingMore 永远为 true
+    if (loadingMore.value) loadingMore.value = false
+  }
+}
+
+// =========== 下拉刷新：重新加载最新数据 ===========
+async function onRefresh() {
+  try {
+    const res = await queryHistoryEntries({ pageSize: PAGE_SIZE })
+    if (res.data.code === 0 && res.data.data) {
+      entries.value = sortAsc(res.data.data)
+      noMoreHistory.value = res.data.data.length < PAGE_SIZE
+    }
+  } finally {
+    refreshing.value = false
+    await nextTick()
+    scrollToBottom()
+  }
+}
+
+// =========== 输入 & 添加记录 ===========
 const selectedType = ref<string>('Do')
+const inputContent = ref('')
+const adding = ref(false)
+
 const currentPlaceholder = computed(
   () => ENTRY_TYPES.find((t) => t.value === selectedType.value)?.placeholder ?? '',
 )
@@ -122,21 +337,28 @@ const currentColor = computed(
   () => ENTRY_TYPES.find((t) => t.value === selectedType.value)?.color ?? '#22C55E',
 )
 
-// 输入内容
-const inputContent = ref('')
-const adding = ref(false)
-
-// DailyEntries 组件实例引用（用于读取记录列表）
-const dailyEntriesRef = ref<InstanceType<typeof DailyEntries> | null>(null)
-
-// 各类型数量统计（仅显示数量 > 0 的类型）
-const entryCounts = computed(() => {
-  const list = dailyEntriesRef.value?.entries ?? []
-  return ENTRY_TYPES.map((t) => ({
-    ...t,
-    count: list.filter((e) => e.entryType === t.value).length,
-  })).filter((t) => t.count > 0)
-})
+/**
+ * 追加最新条目到列表底部，不替换已加载的历史数据。
+ * 通过 ID 去重，只将后端返回中本地不存在的条目 append 到末尾。
+ */
+async function appendLatestEntries() {
+  const today = new Date().toISOString().slice(0, 10)
+  const res = await queryDailyEntries({ date: today })
+  if (res.data.code === 0 && res.data.data) {
+    const latest = sortAsc(res.data.data)
+    if (entries.value.length === 0) {
+      entries.value = latest
+    } else {
+      const existingIds = new Set(entries.value.map((e) => e.id))
+      const newEntries = latest.filter((e) => !existingIds.has(e.id))
+      if (newEntries.length > 0) {
+        entries.value = [...entries.value, ...newEntries]
+      }
+    }
+    await nextTick()
+    scrollToBottom()
+  }
+}
 
 async function handleAdd() {
   const content = inputContent.value.trim()
@@ -148,10 +370,11 @@ async function handleAdd() {
 
   adding.value = true
   try {
-    const res = await createArticle({ content, entryType: selectedType.value })
+    const res = await addEntry({ content, entryType: selectedType.value })
     if (res.data.code === 0) {
       inputContent.value = ''
-      await dailyEntriesRef.value?.refresh()
+      // 只追加新条目，保留已加载的历史数据，避免清空重载
+      await appendLatestEntries()
     } else {
       showToast({ type: 'fail', message: '添加失败：' + res.data.message })
     }
@@ -162,6 +385,109 @@ async function handleAdd() {
   }
 }
 
+// =========== 勾选 Do 类型 ===========
+async function handleToggleChecked(entry: API.EntriesVo, val: boolean) {
+  const checked = val ? 1 : 0
+  const prev = entry.checked
+  entry.checked = checked
+  try {
+    const res = await updateChecked({ id: entry.id!, checked })
+    if (res.data.code !== 0) {
+      entry.checked = prev
+      showToast({ type: 'fail', message: '更新失败' })
+    }
+  } catch {
+    entry.checked = prev
+    showToast({ type: 'fail', message: '网络错误' })
+  }
+}
+
+// =========== 删除记录（乐观删除） ===========
+async function handleDelete(entry: API.EntriesVo) {
+  const index = entries.value.findIndex((e) => e.id === entry.id)
+  entries.value.splice(index, 1)
+  try {
+    const res = await deleteEntry({ id: entry.id! })
+    if (res.data.code !== 0) {
+      entries.value.splice(index, 0, entry)
+      showToast({ type: 'fail', message: '删除失败' })
+    }
+  } catch {
+    entries.value.splice(index, 0, entry)
+    showToast({ type: 'fail', message: '删除失败，请重试' })
+  }
+}
+
+// =========== 编辑记录 ===========
+const editVisible = ref(false)
+const saving = ref(false)
+const editForm = reactive({ id: '', content: '', entryType: 'Do' })
+
+const currentEditPlaceholder = computed(
+  () => ENTRY_TYPES.find((t) => t.value === editForm.entryType)?.placeholder ?? '',
+)
+const currentEditColor = computed(
+  () => ENTRY_TYPES.find((t) => t.value === editForm.entryType)?.color ?? '#22C55E',
+)
+
+function openEdit(entry: API.EntriesVo) {
+  editForm.id = entry.id ?? ''
+  editForm.content = entry.content ?? ''
+  editForm.entryType = entry.entryType ?? 'Do'
+  editVisible.value = true
+}
+
+async function submitEdit() {
+  if (!editForm.content.trim()) {
+    showToast('内容不能为空')
+    return
+  }
+  saving.value = true
+  try {
+    const res = await updateContentAndType({
+      id: editForm.id,
+      content: editForm.content.trim(),
+      entryType: editForm.entryType,
+    })
+    if (res.data.code === 0) {
+      const target = entries.value.find((e) => e.id === editForm.id)
+      if (target) {
+        target.content = editForm.content.trim()
+        target.entryType = editForm.entryType
+      }
+      editVisible.value = false
+      showToast({ type: 'success', message: '已更新' })
+    } else {
+      showToast({ type: 'fail', message: '更新失败' })
+    }
+  } finally {
+    saving.value = false
+  }
+}
+
+// =========== 日期分组 ===========
+function getEntryDay(createTime?: string): string {
+  if (!createTime) return ''
+  const d = new Date(createTime)
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+}
+
+function shouldShowDateHeader(index: number): boolean {
+  if (index === 0) return true
+  return getEntryDay(entries.value[index]?.createTime) !== getEntryDay(entries.value[index - 1]?.createTime)
+}
+
+function formatEntryDate(createTime?: string): string {
+  if (!createTime) return ''
+  return new Date(createTime).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  })
+}
+
+// =========== 路由 ===========
 function goToProfile() {
   router.push('/profile')
 }
@@ -169,6 +495,9 @@ function goToProfile() {
 function goToHistory() {
   router.push('/history')
 }
+
+// =========== 初始化 ===========
+loadInitial()
 </script>
 
 <style scoped>
@@ -210,42 +539,128 @@ function goToHistory() {
   justify-content: center;
 }
 
-/* ======= 日期标签 ======= */
-.record-page__date-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.date-label__left {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #94a3b8;
-}
-
-.date-label__stats {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.entry-stat-tag {
-  font-size: 0.6875rem;
-  font-weight: 500;
-  border-radius: 9999px;
-  padding: 0.125rem 0.45rem;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-
 /* ======= 内容区 ======= */
 .record-page__body {
   background: var(--color-background-tertiary);
+  /* 禁用浏览器 scroll anchoring，由我们手动补偿滚动位置，避免双重偏移 */
+  overflow-anchor: none;
+}
+
+/* van-pull-refresh 内撑满，确保空状态也可触发下拉 */
+.record-page__pull-refresh {
+  min-height: 100%;
+}
+
+/* ======= 日期分组标题 ======= */
+.date-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.5rem;
+}
+
+.date-group-header__line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.date-group-header__label {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ======= 记录条目 ======= */
+.entry-swipe-cell {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.entry-swipe-cell:last-child {
+  border-bottom: none;
+}
+
+.entry-delete-btn {
+  height: 100%;
+  width: 4.5rem;
+}
+
+/* Tag：pill 样式 */
+.entry-type-tag {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: var(--radius-full) !important;
+  padding: 0.15rem 0.5rem !important;
+  border: none !important;
+  line-height: 1.4;
+}
+
+/* Checkbox 对齐 */
+.entry-swipe-cell :deep(.van-checkbox) {
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.entry-swipe-cell :deep(.van-checkbox__icon) {
+  height: 1.125rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-swipe-cell :deep(.van-checkbox__icon .van-icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ======= 加载状态提示 ======= */
+.list-center-tip {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.load-more-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.no-more-tip {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  letter-spacing: 0.04em;
+}
+
+/* ======= 编辑弹层 ======= */
+.edit-popup__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.edit-popup__field {
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+}
+
+.edit-popup__field :deep(.van-field__control::placeholder) {
+  font-style: italic;
+  color: #c0ccda;
 }
 
 /* ======= 底部输入区 ======= */

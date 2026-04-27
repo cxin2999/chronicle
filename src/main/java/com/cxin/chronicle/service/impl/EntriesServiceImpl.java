@@ -105,4 +105,15 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
         // 执行逻辑删除（由于实体类使用了@TableLogic注解）
         return this.remove(queryWrapper);
     }
+
+    @Override
+    public List<EntriesVo> queryHistoryWithCursor(User loginUser, EntriesHistoryReq request) {
+        int pageSize = request.getPageSize() != null ? request.getPageSize() : 10;
+        List<Entries> entriesList = baseMapper.queryHistoryWithCursor(
+                loginUser.getId(),
+                request.getLastCreateTime(),
+                pageSize
+        );
+        return entriesConvert.toEntryVoList(entriesList);
+    }
 }
