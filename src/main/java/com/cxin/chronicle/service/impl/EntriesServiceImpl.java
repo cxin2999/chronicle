@@ -70,12 +70,6 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
 
     @Override
     public boolean updateChecked(User loginUser, EntriesUpdateCheckedReq request) {
-        // 校验checked值只能为0或1
-        Byte checked = request.getChecked();
-        if (checked != 0 && checked != 1) {
-            throw new IllegalArgumentException("勾选状态只能为0或1");
-        }
-
         // 构建更新条件：当前用户 + 指定ID
         LambdaQueryWrapper<Entries> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Entries::getId, request.getId())
@@ -83,7 +77,7 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
 
         // 执行更新
         Entries entries = new Entries();
-        entries.setChecked(checked);
+        entries.setChecked(request.getChecked());
         return this.update(entries, queryWrapper);
     }
 

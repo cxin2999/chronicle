@@ -52,7 +52,7 @@ public class Entries implements Serializable {
      * 是否勾选
      */
     @TableField("checked")
-    private Byte checked;
+    private int checked;
 
     /**
      * 创建时间

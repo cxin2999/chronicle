@@ -24,7 +24,7 @@
     </header>
 
     <!-- 中间：当日记录 -->
-    <main class="page-body record-page__body" ref="bodyRef">
+    <main class="page-body record-page__body">
       <div class="record-page__date-label">
         <div class="date-label__left">
           <van-icon name="calendar-o" size="0.875rem" />
@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useLoginUserStore } from '@/stores/loginUser'
@@ -126,9 +126,8 @@ const currentColor = computed(
 const inputContent = ref('')
 const adding = ref(false)
 
-// DailyEntries 组件实例引用（用于刷新）
+// DailyEntries 组件实例引用（用于读取记录列表）
 const dailyEntriesRef = ref<InstanceType<typeof DailyEntries> | null>(null)
-const bodyRef = ref<HTMLElement | null>(null)
 
 // 各类型数量统计（仅显示数量 > 0 的类型）
 const entryCounts = computed(() => {
@@ -139,14 +138,6 @@ const entryCounts = computed(() => {
   })).filter((t) => t.count > 0)
 })
 
-function scrollToBottom() {
-  nextTick(() => {
-    if (bodyRef.value) {
-      bodyRef.value.scrollTop = bodyRef.value.scrollHeight
-    }
-  })
-}
-
 async function handleAdd() {
   const content = inputContent.value.trim()
   if (!content) {
@@ -155,29 +146,16 @@ async function handleAdd() {
   }
   if (adding.value) return
 
-  // 乐观更新：立即插入临时条目，清空输入框
-  const tempId = `temp_${Date.now()}`
-  const tempEntry: API.EntriesVo = {
-    id: tempId,
-    content,
-    entryType: selectedType.value,
-    checked: '0',
-  }
-  dailyEntriesRef.value?.addOptimistic(tempEntry)
-  inputContent.value = ''
-  scrollToBottom()
-
-  // 异步持久化
   adding.value = true
   try {
     const res = await createArticle({ content, entryType: selectedType.value })
-    if (res.data.code !== 0) {
-      // 回滚
-      dailyEntriesRef.value?.removeEntry(tempId)
+    if (res.data.code === 0) {
+      inputContent.value = ''
+      await dailyEntriesRef.value?.refresh()
+    } else {
       showToast({ type: 'fail', message: '添加失败：' + res.data.message })
     }
   } catch {
-    dailyEntriesRef.value?.removeEntry(tempId)
     showToast({ type: 'fail', message: '添加失败，请重试' })
   } finally {
     adding.value = false

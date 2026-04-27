@@ -1,5 +1,6 @@
 package com.cxin.chronicle.infrastructure.model.dto.entries;
 
+import com.cxin.chronicle.infrastructure.annotation.ValidChecked;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,7 +24,7 @@ public class EntriesUpdateCheckedReq {
     /**
      * 是否勾选 0-未勾选 1-已勾选
      */
-    @NotNull(message = "勾选状态不能为空")
+    @ValidChecked(message = "勾选状态只能为0或1")
     @Schema(description = "是否勾选 0-未勾选 1-已勾选")
-    private Byte checked;
+    private Integer checked;
 }

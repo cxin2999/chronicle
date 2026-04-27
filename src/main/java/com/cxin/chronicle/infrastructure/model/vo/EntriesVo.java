@@ -20,7 +20,7 @@ public class EntriesVo {
     private String entryType;
 
     @Schema(description = "是否勾选")
-    private Byte checked;
+    private int checked;
 
     @Schema(description = "创建时间")
     private LocalDateTime createTime;

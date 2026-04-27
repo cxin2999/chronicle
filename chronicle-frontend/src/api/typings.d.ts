@@ -56,6 +56,11 @@ declare namespace API {
     entryType?: string
   }
 
+  type EntriesDeleteReq = {
+    /** 记录ID */
+    id: string
+  }
+
   type EntriesQueryReq = {
     /** 记录日期（格式：yyyy-MM-dd） */
     date: string
@@ -65,7 +70,7 @@ declare namespace API {
     /** 记录ID */
     id: string
     /** 是否勾选 0-未勾选 1-已勾选 */
-    checked: string
+    checked: number
   }
 
   type EntriesUpdateContentAndTypeReq = {
@@ -87,7 +92,7 @@ declare namespace API {
     /** 记录类型 枚举值:Do/Idea/Think/Rule */
     entryType?: string
     /** 是否勾选 */
-    checked?: string
+    checked?: number
     /** 创建时间 */
     createTime?: string
     /** 更新时间 */

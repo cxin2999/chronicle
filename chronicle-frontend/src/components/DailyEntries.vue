@@ -1,12 +1,12 @@
 <template>
   <div class="daily-entries">
     <!-- 加载状态 -->
-    <div v-if="loading" class="daily-entries__loading">
+    <div v-if="loading && entries.length === 0" class="daily-entries__loading">
       <van-loading size="1.5rem" color="var(--color-primary)" />
     </div>
 
     <!-- 空状态 -->
-    <div v-else-if="entries.length === 0" class="daily-entries__empty">
+    <div v-else-if="!loading && entries.length === 0" class="daily-entries__empty">
       <van-empty description="暂无记录" image-size="5rem" />
     </div>
 
@@ -18,7 +18,7 @@
           <!-- Do 类型展示 Checkbox -->
           <van-checkbox
             v-if="entry.entryType === 'Do'"
-            :model-value="entry.checked === '1'"
+            :model-value="entry.checked === 1"
             shape="square"
             icon-size="1.125rem"
             :checked-color="getEntryType('Do').color"
@@ -29,7 +29,7 @@
           <!-- 记录文本 -->
           <span
             class="entry-content"
-            :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === '1' }"
+            :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === 1 }"
           >
             {{ entry.content }}
           </span>
@@ -144,18 +144,19 @@ async function fetchEntries() {
 
 // 勾选/取消 Do 类型
 async function handleToggleChecked(entry: API.EntriesVo, val: boolean) {
-  const checked = val ? '1' : '0'
+  const checked = val ? 1 : 0
+  const previousChecked = entry.checked === 1 ? 1 : 0
   // 乐观更新
   entry.checked = checked
   try {
     const res = await updateChecked({ id: entry.id!, checked })
     if (res.data.code !== 0) {
       // 回滚
-      entry.checked = val ? '0' : '1'
+      entry.checked = previousChecked
       showToast({ type: 'fail', message: '更新失败' })
     }
   } catch {
-    entry.checked = val ? '0' : '1'
+    entry.checked = previousChecked
     showToast({ type: 'fail', message: '网络错误' })
   }
 }
@@ -234,18 +235,8 @@ async function submitEdit() {
 // 首次加载及日期变化时重新拉取
 fetchEntries()
 
-// 乐观添加：立即插入临时条目到列表末尾
-function addOptimistic(entry: API.EntriesVo) {
-  entries.value.push(entry)
-}
-
-// 移除条目（用于乐观更新回滚）
-function removeEntry(id: string) {
-  entries.value = entries.value.filter((e) => e.id !== id)
-}
-
 // 暴露方法供父组件调用
-defineExpose({ refresh: fetchEntries, addOptimistic, removeEntry, entries })
+defineExpose({ refresh: fetchEntries, entries })
 </script>
 
 <style scoped>
