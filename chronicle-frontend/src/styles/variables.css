@@ -1,9 +1,9 @@
 /**
- * CSS 变量定义 - 清新绿色配色方案
+ * CSS 变量定义 - 简约精致配色方案（Apple 风格）
  */
 
-/* 引入 Google Fonts - Geometric Modern */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600;700&display=swap');
+/* 引入 Google Fonts - Noto Sans SC */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 :root {
   /* 品牌色 - 绿色系 */
@@ -21,16 +21,20 @@
   --color-error: #EF4444;
   --color-info: #3B82F6;
 
-  /* 中性色 */
+  /* 字体 */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Helvetica Neue', sans-serif;
+
+  /* 中性色 - Apple 系统色 */
   --color-background: #FFFFFF;
   --color-background-secondary: #b6c8da;
-  --color-background-tertiary: #F1F5F9;
-  --color-background-dark: #0F172A;
-  --color-text: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94A3B8;
-  --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
+  --color-background-tertiary: #F2F2F7;
+  --color-background-dark: #1C1C1E;
+  --color-text: #1C1C1E;
+  --color-text-secondary: #3C3C43;
+  --color-text-muted: rgba(60, 60, 67, 0.45);
+  --color-border: rgba(60, 60, 67, 0.18);
+  --color-border-light: rgba(60, 60, 67, 0.08);
+  --color-separator: rgba(60, 60, 67, 0.12);
 
   /* 渐变 */
   --gradient-primary: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
@@ -62,9 +66,10 @@
   --radius-full: 9999px;
 
   /* 过渡 */
-  --transition-fast: 150ms ease-out;
-  --transition-normal: 200ms ease-out;
-  --transition-slow: 300ms ease-out;
+  --transition-fast: 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 360ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* 毛玻璃 */
   --glass-bg: rgba(255, 255, 255, 0.9);

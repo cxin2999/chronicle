@@ -14,36 +14,34 @@
     <template v-else>
       <van-swipe-cell v-for="entry in entries" :key="entry.id" class="daily-entries__swipe-cell">
         <!-- 记录内容区 -->
-        <div class="entry-item" @click="openEdit(entry)">
-          <!-- Do 类型展示 Checkbox -->
-          <van-checkbox
-            v-if="entry.entryType === 'Do'"
-            :model-value="entry.checked === 1"
-            shape="square"
-            icon-size="1.125rem"
-            :checked-color="getEntryType('Do').color"
-            @click.stop
-            @update:model-value="(val: boolean) => handleToggleChecked(entry, val)"
-          />
+        <div class="entry-item" @click="openEdit(entry)" :style="{ '--entry-color': getEntryType(entry.entryType ?? '').color }">
+          <div class="entry-item__accent" />
+          <div class="entry-item__body">
+            <div class="entry-item__main">
+              <!-- Do 类型展示 Checkbox -->
+              <van-checkbox
+                v-if="entry.entryType === 'Do'"
+                :model-value="entry.checked === 1"
+                shape="square"
+                icon-size="1rem"
+                :checked-color="getEntryType('Do').color"
+                @click.stop
+                @update:model-value="(val: boolean) => handleToggleChecked(entry, val)"
+              />
 
-          <!-- 记录文本 -->
-          <span
-            class="entry-content"
-            :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === 1 }"
-          >
-            {{ entry.content }}
-          </span>
-
-          <!-- 类型标签 -->
-          <van-tag
-            class="entry-type-tag"
-            :style="{
-              background: getEntryType(entry.entryType ?? '').bgColor,
-              color: getEntryType(entry.entryType ?? '').color,
-            }"
-          >
-            {{ entry.entryType }}
-          </van-tag>
+              <!-- 记录文本 -->
+              <span
+                class="entry-content"
+                :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === 1 }"
+              >
+                {{ entry.content }}
+              </span>
+            </div>
+            <div class="entry-item__meta">
+              <span class="entry-type-label" :style="{ color: getEntryType(entry.entryType ?? '').color }">{{ entry.entryType }}</span>
+              <span class="entry-time">{{ formatEntryTime(entry.createTime) }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- 左滑显示删除按钮 -->
@@ -235,6 +233,12 @@ async function submitEdit() {
 // 首次加载及日期变化时重新拉取
 fetchEntries()
 
+function formatEntryTime(createTime?: string): string {
+  if (!createTime) return ''
+  const d = new Date(createTime)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
 // 暴露方法供父组件调用
 defineExpose({ refresh: fetchEntries, entries })
 </script>
@@ -247,12 +251,12 @@ defineExpose({ refresh: fetchEntries, entries })
 .daily-entries__loading {
   display: flex;
   justify-content: center;
-  padding: 2rem 0;
+  padding: 2.5rem 0;
 }
 
-/* 分割线更细更淡，内缩增加呼吸感 */
 .daily-entries__swipe-cell {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 0.5px solid var(--color-border-light);
+  background: #fff;
 }
 
 .daily-entries__swipe-cell:last-child {
@@ -262,34 +266,19 @@ defineExpose({ refresh: fetchEntries, entries })
 .daily-entries__delete-btn {
   height: 100%;
   width: 4.5rem;
+  font-size: 0.875rem;
 }
 
-/* Tag：去掉边框，圆角 pill，极小字号 */
-.entry-type-tag {
-  flex-shrink: 0;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  border-radius: var(--radius-full) !important;
-  padding: 0.15rem 0.5rem !important;
-  border: none !important;
-  line-height: 1.4;
-}
-
-/* Checkbox 与文字同行对齐 */
+/* Checkbox 对齐 */
 .entry-item :deep(.van-checkbox) {
   flex-shrink: 0;
-  align-items: center;
+  align-self: flex-start;
+  margin-top: 0.1rem;
 }
 
 .entry-item :deep(.van-checkbox__icon) {
-  height: 1.125rem;
+  height: 1rem;
   line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.entry-item :deep(.van-checkbox__icon .van-icon) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -297,21 +286,28 @@ defineExpose({ refresh: fetchEntries, entries })
 
 /* 编辑弹层 */
 .edit-popup__title {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   text-align: center;
+  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
 }
 
 .edit-popup__field {
-  background: #f8fafc;
-  border-radius: var(--radius-md);
+  background: rgba(120, 120, 128, 0.08);
+  border-radius: var(--radius-lg);
 }
 
-/* 编辑弹层的 placeholder 斜体淡色 */
 .edit-popup__field :deep(.van-field__control::placeholder) {
-  font-style: italic;
-  color: #c0ccda;
+  color: var(--color-text-muted);
+  font-style: normal;
+}
+
+.edit-popup__field :deep(.van-field__control) {
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  font-family: var(--font-sans);
 }
 </style>

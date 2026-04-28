@@ -77,38 +77,36 @@
             <template v-for="(entry, index) in entries" :key="entry.id">
               <!-- 日期分组标题 -->
               <div v-if="shouldShowDateHeader(index)" class="date-group-header">
-                <span class="date-group-header__line" />
                 <span class="date-group-header__label">{{ formatEntryDate(entry.createTime) }}</span>
-                <span class="date-group-header__line" />
               </div>
 
               <!-- 记录条目（左滑删除） -->
               <van-swipe-cell class="entry-swipe-cell">
-                <div class="entry-item" @click="openEdit(entry)">
-                  <van-checkbox
-                    v-if="entry.entryType === 'Do'"
-                    :model-value="entry.checked === 1"
-                    shape="square"
-                    icon-size="1.125rem"
-                    :checked-color="getEntryType('Do').color"
-                    @click.stop
-                    @update:model-value="(val: boolean) => handleToggleChecked(entry, val)"
-                  />
-                  <span
-                    class="entry-content"
-                    :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === 1 }"
-                  >
-                    {{ entry.content }}
-                  </span>
-                  <van-tag
-                    class="entry-type-tag"
-                    :style="{
-                      background: getEntryType(entry.entryType ?? '').bgColor,
-                      color: getEntryType(entry.entryType ?? '').color,
-                    }"
-                  >
-                    {{ entry.entryType }}
-                  </van-tag>
+                <div class="entry-item" @click="openEdit(entry)" :style="{ '--entry-color': getEntryType(entry.entryType ?? '').color }">
+                  <div class="entry-item__accent" />
+                  <div class="entry-item__body">
+                    <div class="entry-item__main">
+                      <van-checkbox
+                        v-if="entry.entryType === 'Do'"
+                        :model-value="entry.checked === 1"
+                        shape="square"
+                        icon-size="1rem"
+                        :checked-color="getEntryType('Do').color"
+                        @click.stop
+                        @update:model-value="(val: boolean) => handleToggleChecked(entry, val)"
+                      />
+                      <span
+                        class="entry-content"
+                        :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === 1 }"
+                      >
+                        {{ entry.content }}
+                      </span>
+                    </div>
+                    <div class="entry-item__meta">
+                      <span class="entry-type-label" :style="{ color: getEntryType(entry.entryType ?? '').color }">{{ entry.entryType }}</span>
+                      <span class="entry-time">{{ formatEntryTime(entry.createTime) }}</span>
+                    </div>
+                  </div>
                 </div>
                 <template #right>
                   <van-button
@@ -487,6 +485,12 @@ function formatEntryDate(createTime?: string): string {
   })
 }
 
+function formatEntryTime(createTime?: string): string {
+  if (!createTime) return ''
+  const d = new Date(createTime)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
 // =========== 路由 ===========
 function goToProfile() {
   router.push('/profile')
@@ -503,79 +507,72 @@ loadInitial()
 <style scoped>
 /* ======= Header ======= */
 .record-page__header {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-/* 头像：圆形 + 细边框 + 立体阴影 */
 .record-page__avatar {
   cursor: pointer;
   transition: opacity var(--transition-fast);
   border-radius: 50%;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1.5px rgba(255, 255, 255, 0.85),
-    0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 .record-page__avatar:active {
-  opacity: 0.7;
+  opacity: 0.55;
 }
 
 .avatar-img {
   display: block;
 }
 
-/* 搜索按钮：圆形浅灰背景，轻盈图标 */
 .record-page__search-btn {
   width: 2rem !important;
   height: 2rem !important;
   border-radius: 50% !important;
-  background: #f1f5f9 !important;
+  background: rgba(120, 120, 128, 0.1) !important;
   border: none !important;
-  color: #64748b !important;
+  color: var(--color-text-secondary) !important;
   padding: 0 !important;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background var(--transition-fast) !important;
+}
+
+.record-page__search-btn:active {
+  background: rgba(120, 120, 128, 0.2) !important;
 }
 
 /* ======= 内容区 ======= */
 .record-page__body {
   background: var(--color-background-tertiary);
-  /* 禁用浏览器 scroll anchoring，由我们手动补偿滚动位置，避免双重偏移 */
   overflow-anchor: none;
 }
 
-/* van-pull-refresh 内撑满，确保空状态也可触发下拉 */
 .record-page__pull-refresh {
   min-height: 100%;
 }
 
-/* ======= 日期分组标题 ======= */
+/* ======= 日期分组标题（Apple 风格，左对齐节标题） ======= */
 .date-group-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem 0.5rem;
-}
-
-.date-group-header__line {
-  flex: 1;
-  height: 1px;
-  background: #e2e8f0;
+  padding: 1.125rem 1rem 0.3125rem 1.25rem;
 }
 
 .date-group-header__label {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #94a3b8;
-  white-space: nowrap;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+  font-family: var(--font-sans);
 }
 
 /* ======= 记录条目 ======= */
 .entry-swipe-cell {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 0.5px solid var(--color-border-light);
+  background: #fff;
 }
 
 .entry-swipe-cell:last-child {
@@ -585,34 +582,19 @@ loadInitial()
 .entry-delete-btn {
   height: 100%;
   width: 4.5rem;
+  font-size: 0.875rem;
 }
 
-/* Tag：pill 样式 */
-.entry-type-tag {
+/* Checkbox 与文字同行对齐 */
+.entry-item :deep(.van-checkbox) {
   flex-shrink: 0;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  border-radius: var(--radius-full) !important;
-  padding: 0.15rem 0.5rem !important;
-  border: none !important;
-  line-height: 1.4;
+  align-self: flex-start;
+  margin-top: 0.1rem;
 }
 
-/* Checkbox 对齐 */
-.entry-swipe-cell :deep(.van-checkbox) {
-  flex-shrink: 0;
-  align-items: center;
-}
-
-.entry-swipe-cell :deep(.van-checkbox__icon) {
-  height: 1.125rem;
+.entry-item :deep(.van-checkbox__icon) {
+  height: 1rem;
   line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.entry-swipe-cell :deep(.van-checkbox__icon .van-icon) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -622,7 +604,7 @@ loadInitial()
 .list-center-tip {
   display: flex;
   justify-content: center;
-  padding: 2rem 0;
+  padding: 2.5rem 0;
 }
 
 .load-more-tip {
@@ -630,59 +612,70 @@ loadInitial()
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   font-size: 0.8125rem;
-  color: #94a3b8;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
 }
 
 .no-more-tip {
   display: flex;
   justify-content: center;
-  padding: 0.75rem 1rem;
-  font-size: 0.75rem;
-  color: #cbd5e1;
-  letter-spacing: 0.04em;
+  padding: 0.875rem 1rem;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+  font-family: var(--font-sans);
 }
 
 /* ======= 编辑弹层 ======= */
 .edit-popup__title {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   text-align: center;
+  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
 }
 
 .edit-popup__field {
-  background: #f8fafc;
-  border-radius: var(--radius-md);
+  background: rgba(120, 120, 128, 0.08);
+  border-radius: var(--radius-lg);
 }
 
 .edit-popup__field :deep(.van-field__control::placeholder) {
-  font-style: italic;
-  color: #c0ccda;
+  color: var(--color-text-muted);
+  font-style: normal;
+}
+
+.edit-popup__field :deep(.van-field__control) {
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  font-family: var(--font-sans);
 }
 
 /* ======= 底部输入区 ======= */
 .record-page__input-bar {
   flex-shrink: 0;
-  padding: 0.75rem 1rem calc(0.875rem + env(safe-area-inset-bottom, 0px));
-  background: #fff;
-  border-top: 1px solid var(--color-border-light);
-  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.05);
+  padding: 0.625rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 0.5px solid var(--color-separator);
 }
 
-/* 输入行：浅灰圆角矩形容器 */
+/* 输入行 */
 .record-page__input-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f8fafc;
+  background: rgba(120, 120, 128, 0.08);
   border-radius: var(--radius-xl);
   padding: 0 0.375rem 0 0;
+  transition: background var(--transition-fast);
 }
 
-/* 输入框：透明背景 + 斜体淡色 placeholder */
 .record-page__field {
   flex: 1;
   background: transparent !important;
@@ -690,29 +683,29 @@ loadInitial()
 }
 
 .record-page__field :deep(.van-field__control::placeholder) {
-  font-style: italic;
-  color: #c0ccda;
+  color: var(--color-text-muted);
+  font-style: normal;
 }
 
 .record-page__field :deep(.van-field__control) {
   font-size: 0.9375rem;
   color: var(--color-text);
+  font-family: var(--font-sans);
 }
 
-/* 添加按钮：圆形 + 动态颜色（由 :color 控制）+ 点击微缩放 */
+/* 添加按钮 */
 .record-page__add-btn {
   flex-shrink: 0;
-  width: 2.25rem !important;
-  height: 2.25rem !important;
+  width: 2.125rem !important;
+  height: 2.125rem !important;
   min-width: unset !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important;
   transition:
     transform var(--transition-fast),
-    box-shadow var(--transition-fast) !important;
+    opacity var(--transition-fast) !important;
 }
 
 .record-page__add-btn:active {
-  transform: scale(0.92) !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+  transform: scale(0.88) !important;
+  opacity: 0.85 !important;
 }
 </style>
