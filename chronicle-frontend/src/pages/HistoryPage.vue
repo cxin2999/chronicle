@@ -1,35 +1,27 @@
 <template>
   <div class="history-page mobile-page">
-    <!-- 头部：返回 + 年份导航 + 跳转到记录 -->
+    <!-- 头部：返回 + 年份导航 -->
     <header class="history-page__header page-header">
-      <!-- 返回按钮 -->
-      <van-button
-        icon="arrow-left"
-        size="small"
-        plain
-        :border="false"
-        class="history-page__back-btn"
-        @click="goToRecord"
-      />
+      <!-- 返回按钮（iOS 风格） -->
+      <button class="history-back-btn" @click="goToRecord">
+        <span class="history-back-btn__chevron">‹</span>
+        <span class="history-back-btn__label">记录</span>
+      </button>
 
-      <!-- 年份切换 -->
-      <van-button
-        icon="arrow-left"
-        size="small"
-        plain
-        :border="false"
-        :disabled="currentYear <= MIN_YEAR"
-        @click="prevYear"
-      />
-      <span class="page-header__title">{{ currentYear }} 年</span>
-      <van-button
-        icon="arrow"
-        size="small"
-        plain
-        :border="false"
-        :disabled="currentYear >= thisYear"
-        @click="nextYear"
-      />
+      <!-- 年份导航胶囊 -->
+      <div class="year-nav">
+        <button
+          class="year-nav__arrow"
+          :disabled="currentYear <= MIN_YEAR"
+          @click="prevYear"
+        >‹</button>
+        <span class="year-nav__label">{{ currentYear }} 年</span>
+        <button
+          class="year-nav__arrow"
+          :disabled="currentYear >= thisYear"
+          @click="nextYear"
+        >›</button>
+      </div>
     </header>
 
     <!-- 日历内容 -->
@@ -59,6 +51,7 @@
               :class="{
                 'day-cell--has-record': hasRecord(currentYear, month, day),
                 'day-cell--today': isToday(currentYear, month, day),
+                'day-cell--weekend': isWeekend(currentYear, month, day),
               }"
               @click="handleDayClick(currentYear, month, day)"
             >
@@ -73,7 +66,7 @@
     <van-popup v-model:show="dayPopupVisible" position="bottom" round :style="{ height: '65vh' }">
       <div class="day-popup">
         <div class="day-popup__header">
-          <span class="day-popup__date">{{ selectedDate }}</span>
+          <span class="day-popup__date">{{ formatSelectedDate }}</span>
           <van-icon name="cross" class="day-popup__close" @click="dayPopupVisible = false" />
         </div>
         <div class="day-popup__body">
@@ -92,7 +85,7 @@ import DailyEntries from '@/components/DailyEntries.vue'
 
 const router = useRouter()
 
-const WEEK_DAYS = ['日', '一', '二', '三', '四', '五', '六']
+const WEEK_DAYS = ['一', '二', '三', '四', '五', '六', '日']
 const MIN_YEAR = 2020
 
 const thisYear = new Date().getFullYear()
@@ -113,9 +106,16 @@ function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()
 }
 
-/** 某月1日是周几（0=周日） */
+/** 某月1日在 Mon-first 网格中的列偏移（Mon=0, ..., Sun=6） */
 function getFirstDayOffset(year: number, month: number): number {
-  return new Date(year, month - 1, 1).getDay()
+  const dow = new Date(year, month - 1, 1).getDay() // 0=Sun
+  return dow === 0 ? 6 : dow - 1
+}
+
+/** 是否是周末（周六或周日） */
+function isWeekend(year: number, month: number, day: number): boolean {
+  const dow = new Date(year, month - 1, day).getDay()
+  return dow === 0 || dow === 6
 }
 
 /** 格式化日期为 yyyy-MM-dd */
@@ -146,44 +146,129 @@ function handleDayClick(year: number, month: number, day: number) {
 function goToRecord() {
   router.push('/record')
 }
+
+const formatSelectedDate = computed(() => {
+  if (!selectedDate.value) return ''
+  return new Date(selectedDate.value).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  })
+})
 </script>
 
 <style scoped>
+/* ======= Header ======= */
 .history-page__header {
-  justify-content: flex-start;
-  gap: 0.25rem;
+  justify-content: space-between;
 }
 
-.history-page__back-btn {
-  flex-shrink: 0;
-  color: var(--color-text-secondary) !important;
+/* iOS 风格返回按钮 */
+.history-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.0625rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem 0.25rem 0.125rem;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--transition-fast);
 }
 
+.history-back-btn:active {
+  opacity: 0.45;
+}
+
+.history-back-btn__chevron {
+  font-size: 1.875rem;
+  line-height: 1;
+  font-weight: 200;
+  margin-top: -0.1rem;
+  letter-spacing: -0.05em;
+}
+
+.history-back-btn__label {
+  font-size: 1.0625rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* 年份导航胶囊 */
+.year-nav {
+  display: flex;
+  align-items: center;
+  background: rgba(120, 120, 128, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  height: 2rem;
+}
+
+.year-nav__arrow {
+  width: 2rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1875rem;
+  line-height: 1;
+  font-weight: 300;
+  color: var(--color-text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.year-nav__arrow:active:not(:disabled) {
+  background: rgba(120, 120, 128, 0.18);
+  color: var(--color-text);
+}
+
+.year-nav__arrow:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.year-nav__label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 0 0.375rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  min-width: 4rem;
+  text-align: center;
+}
+
+/* ======= 加载 ======= */
 .history-page__loading {
   display: flex;
   justify-content: center;
   padding: 3rem 0;
 }
 
-/* 日历网格 */
+/* ======= 日历网格 ======= */
 .calendar-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.625rem;
   padding: 0.75rem;
-}
-
-@media (max-width: 768px) {
-  .calendar-grid {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 
 .month-block {
   background: #fff;
   border-radius: var(--radius-lg);
-  padding: 0.625rem 0.5rem;
-  box-shadow: var(--shadow-card);
+  padding: 0.625rem 0.5rem 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .month-block__title {
@@ -191,19 +276,29 @@ function goToRecord() {
   font-weight: 600;
   color: var(--color-text);
   text-align: center;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.3125rem;
+  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
 }
 
 .month-block__week-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1875rem;
 }
 
 .week-label {
-  font-size: 0.5625rem;
+  font-size: 0.5rem;
   color: var(--color-text-muted);
   text-align: center;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+/* 周六日的表头用不同颜色 */
+.week-label:nth-child(6),
+.week-label:nth-child(7) {
+  color: rgba(255, 59, 48, 0.55);
 }
 
 .month-block__days {
@@ -212,6 +307,7 @@ function goToRecord() {
   gap: 1px;
 }
 
+/* ======= 日期格 ======= */
 .day-cell {
   position: relative;
   display: flex;
@@ -227,6 +323,8 @@ function goToRecord() {
   transition: background var(--transition-fast);
   line-height: 1;
   gap: 0.1rem;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 
 .day-cell:active {
@@ -237,6 +335,12 @@ function goToRecord() {
   cursor: default;
 }
 
+/* 周末颜色（在 today / has-record 之前声明，优先级更低） */
+.day-cell--weekend {
+  color: #FF3B30;
+}
+
+/* today 覆盖 weekend */
 .day-cell--today {
   font-weight: 700;
   color: var(--color-primary);
@@ -248,23 +352,23 @@ function goToRecord() {
   width: 0.25rem;
   height: 0.25rem;
   border-radius: 50%;
-  background: #ef4444;
+  background: #FF3B30;
   flex-shrink: 0;
 }
 
+/* has-record 覆盖一切 */
 .day-cell--has-record {
   background: var(--color-primary);
   color: #fff;
   font-weight: 600;
 }
 
-/* today + has-record: 实心圆优先，保留红点 */
 .day-cell--today.day-cell--has-record {
   background: var(--color-primary);
   color: #fff;
 }
 
-/* 日记录弹层 */
+/* ======= 弹层 ======= */
 .day-popup {
   display: flex;
   flex-direction: column;
@@ -275,8 +379,8 @@ function goToRecord() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.875rem 1rem 0.625rem;
-  border-bottom: 1px solid var(--color-border-light);
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 0.5px solid var(--color-separator);
   flex-shrink: 0;
 }
 
@@ -284,13 +388,26 @@ function goToRecord() {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-text);
+  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
 }
 
 .day-popup__close {
-  font-size: 1.125rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(120, 120, 128, 0.12);
+  font-size: 0.875rem;
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 0.25rem;
+  transition: background var(--transition-fast);
+}
+
+.day-popup__close:active {
+  background: rgba(120, 120, 128, 0.22);
 }
 
 .day-popup__body {

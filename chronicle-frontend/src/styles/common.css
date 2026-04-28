@@ -153,7 +153,7 @@ body, html {
 
 /* 左侧类型色彩条 */
 .entry-item__accent {
-  width: 3px;
+  width: 4px;
   background: var(--entry-color, #E2E8F0);
   flex-shrink: 0;
 }
