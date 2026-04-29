@@ -228,6 +228,7 @@ import {
 } from '@/api/entriesController'
 import { ENTRY_TYPES, getEntryType } from '@/constants/entries'
 import defaultAvatar from '@/assets/default_avatar.png'
+import dayjs from 'dayjs'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -340,7 +341,7 @@ const currentColor = computed(
  * 通过 ID 去重，只将后端返回中本地不存在的条目 append 到末尾。
  */
 async function appendLatestEntries() {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = dayjs().format('YYYY-MM-DD')
   const res = await queryDailyEntries({ date: today })
   if (res.data.code === 0 && res.data.data) {
     const latest = sortAsc(res.data.data)
@@ -466,8 +467,7 @@ async function submitEdit() {
 // =========== 日期分组 ===========
 function getEntryDay(createTime?: string): string {
   if (!createTime) return ''
-  const d = new Date(createTime)
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+  return dayjs(createTime).format('YYYY-MM-DD')
 }
 
 function shouldShowDateHeader(index: number): boolean {
@@ -477,18 +477,14 @@ function shouldShowDateHeader(index: number): boolean {
 
 function formatEntryDate(createTime?: string): string {
   if (!createTime) return ''
-  return new Date(createTime).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  })
+  const d = dayjs(createTime)
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  return `${d.format('YYYY年M月D日')} ${weekdays[d.day()]}`
 }
 
 function formatEntryTime(createTime?: string): string {
   if (!createTime) return ''
-  const d = new Date(createTime)
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return dayjs(createTime).format('HH:mm')
 }
 
 // =========== 路由 ===========
