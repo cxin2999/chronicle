@@ -7,13 +7,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * 更新记录内容和类型请求
+ * 更新记录请求（内容、类型、完成百分比）
  *
  * @author Charles Chen
  * @since 2026-04-26
  */
 @Data
-public class EntriesUpdateContentAndTypeReq {
+public class EntriesContentUpdateReq {
 
     /**
      * 记录ID
@@ -36,4 +36,10 @@ public class EntriesUpdateContentAndTypeReq {
     @NotBlank(message = "记录类型不能为空")
     @Schema(description = "记录类型 枚举值:Do/Idea/Think/Rule")
     private String entryType;
+
+    /**
+     * 完成百分比(0-100)
+     */
+    @Schema(description = "完成百分比(0-100)")
+    private Integer completionRate;
 }

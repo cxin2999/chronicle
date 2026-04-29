@@ -56,6 +56,17 @@ declare namespace API {
     entryType?: string
   }
 
+  type EntriesContentUpdateReq = {
+    /** 记录ID */
+    id: string
+    /** 记录内容 */
+    content: string
+    /** 记录类型 枚举值:Do/Idea/Think/Rule */
+    entryType: string
+    /** 完成百分比(0-100) */
+    completionRate?: number
+  }
+
   type EntriesDeleteReq = {
     /** 记录ID */
     id: string
@@ -80,15 +91,6 @@ declare namespace API {
     checked?: number
   }
 
-  type EntriesUpdateContentAndTypeReq = {
-    /** 记录ID */
-    id: string
-    /** 记录内容 */
-    content: string
-    /** 记录类型 枚举值:Do/Idea/Think/Rule */
-    entryType: string
-  }
-
   type EntriesVo = {
     /** id */
     id?: string
@@ -100,6 +102,8 @@ declare namespace API {
     entryType?: string
     /** 是否勾选 */
     checked?: number
+    /** 完成百分比(0-100) */
+    completionRate?: number
     /** 创建时间 */
     createTime?: string
     /** 更新时间 */

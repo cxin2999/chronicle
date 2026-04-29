@@ -55,6 +55,12 @@ public class Entries implements Serializable {
     private Integer checked;
 
     /**
+     * 完成百分比(0-100)
+     */
+    @TableField("completionRate")
+    private Integer completionRate;
+
+    /**
      * 创建时间
      */
     @TableField("createTime")

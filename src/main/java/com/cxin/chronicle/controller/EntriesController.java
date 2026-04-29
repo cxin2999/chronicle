@@ -75,12 +75,12 @@ public class EntriesController {
         return ResultUtils.success(updated);
     }
 
-    @PostMapping("/update/content-and-type")
-    @Operation(summary = "更新记录内容和类型")
+    @PostMapping("/update/content")
+    @Operation(summary = "更新记录（内容、类型、完成百分比）")
     @AuthCheck(mustRole = UserConstant.DEFAULT_ROLE)
-    public BaseResponse<Boolean> updateContentAndType(@RequestBody @Valid EntriesUpdateContentAndTypeReq request, HttpServletRequest httpServletRequest) {
+    public BaseResponse<Boolean> updateEntriesContent(@RequestBody @Valid EntriesContentUpdateReq request, HttpServletRequest httpServletRequest) {
         User loginUser = userService.getCurrentUser(httpServletRequest);
-        Boolean updated = entriesService.updateContentAndType(loginUser, request);
+        Boolean updated = entriesService.updateEntriesContent(loginUser, request);
         return ResultUtils.success(updated);
     }
 

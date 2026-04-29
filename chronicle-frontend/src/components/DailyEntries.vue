@@ -12,49 +12,14 @@
 
     <!-- 记录列表 -->
     <template v-else>
-      <van-swipe-cell v-for="entry in entries" :key="entry.id" class="daily-entries__swipe-cell">
-        <!-- 记录内容区 -->
-        <div class="entry-item" @click="openEdit(entry)" :style="{ '--entry-color': getEntryType(entry.entryType ?? '').color }">
-          <div class="entry-item__accent" />
-          <div class="entry-item__body">
-            <div class="entry-item__main">
-              <!-- Do 类型展示 Checkbox -->
-              <van-checkbox
-                v-if="entry.entryType === 'Do'"
-                :model-value="entry.checked === 1"
-                shape="square"
-                icon-size="1rem"
-                :checked-color="getEntryType('Do').color"
-                @click.stop
-                @update:model-value="(val: boolean) => handleToggleChecked(entry, val)"
-              />
-
-              <!-- 记录文本 -->
-              <span
-                class="entry-content"
-                :class="{ 'is-checked': entry.entryType === 'Do' && entry.checked === 1 }"
-              >
-                {{ entry.content }}
-              </span>
-            </div>
-            <div class="entry-item__meta">
-              <span class="entry-type-label" :style="{ color: getEntryType(entry.entryType ?? '').color }">{{ entry.entryType }}</span>
-              <span class="entry-time">{{ formatEntryTime(entry.createTime) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 左滑显示删除按钮 -->
-        <template #right>
-          <van-button
-            square
-            type="danger"
-            text="删除"
-            class="daily-entries__delete-btn"
-            @click="handleDelete(entry)"
-          />
-        </template>
-      </van-swipe-cell>
+      <EntryItem
+        v-for="entry in entries"
+        :key="entry.id"
+        :entry="entry"
+        @click="openEdit(entry)"
+        @delete="handleDelete(entry)"
+        @toggle-checked="(val: boolean) => handleToggleChecked(entry, val)"
+      />
     </template>
 
     <!-- 编辑底部弹层 -->
@@ -94,6 +59,23 @@
           autosize
         />
 
+        <div v-if="editForm.entryType === 'Do'" class="edit-popup__completion">
+          <div class="edit-popup__completion-header">
+            <span class="edit-popup__completion-label">完成进度</span>
+            <span class="edit-popup__completion-value" :style="{ color: currentEditColor }"
+              >{{ editForm.completionRate }}%</span
+            >
+          </div>
+          <van-slider
+            v-model="editForm.completionRate"
+            :min="0"
+            :max="100"
+            :step="5"
+            :bar-height="4"
+            :active-color="currentEditColor"
+          />
+        </div>
+
         <van-button
           block
           type="primary"
@@ -110,15 +92,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { ref } from 'vue'
 import { showToast } from 'vant'
 import {
   deleteEntry,
   queryDailyEntries,
   updateChecked,
-  updateContentAndType,
 } from '@/api/entriesController'
-import { ENTRY_TYPES, getEntryType } from '@/constants/entries'
+import { ENTRY_TYPES } from '@/constants/entries'
+import EntryItem from '@/components/EntryItem.vue'
+import { useEntryEdit } from '@/composables/useEntryEdit'
 
 const props = defineProps<{
   date: string
@@ -144,17 +127,21 @@ async function fetchEntries() {
 async function handleToggleChecked(entry: API.EntriesVo, val: boolean) {
   const checked = val ? 1 : 0
   const previousChecked = entry.checked === 1 ? 1 : 0
+  const previousRate = entry.completionRate
   // 乐观更新
   entry.checked = checked
+  entry.completionRate = checked === 1 ? 100 : 0
   try {
     const res = await updateChecked({ id: entry.id!, checked })
     if (res.data.code !== 0) {
       // 回滚
       entry.checked = previousChecked
+      entry.completionRate = previousRate
       showToast({ type: 'fail', message: '更新失败' })
     }
   } catch {
     entry.checked = previousChecked
+    entry.completionRate = previousRate
     showToast({ type: 'fail', message: '网络错误' })
   }
 }
@@ -179,65 +166,11 @@ async function handleDelete(entry: API.EntriesVo) {
 }
 
 // -------- 编辑 --------
-const editVisible = ref(false)
-const saving = ref(false)
-const editForm = reactive({
-  id: '',
-  content: '',
-  entryType: 'Do',
-})
-
-const currentEditPlaceholder = computed(
-  () => ENTRY_TYPES.find((t) => t.value === editForm.entryType)?.placeholder ?? '',
-)
-const currentEditColor = computed(
-  () => ENTRY_TYPES.find((t) => t.value === editForm.entryType)?.color ?? '#22C55E',
-)
-
-function openEdit(entry: API.EntriesVo) {
-  editForm.id = entry.id ?? ''
-  editForm.content = entry.content ?? ''
-  editForm.entryType = entry.entryType ?? 'Do'
-  editVisible.value = true
-}
-
-async function submitEdit() {
-  if (!editForm.content.trim()) {
-    showToast('内容不能为空')
-    return
-  }
-  saving.value = true
-  try {
-    const res = await updateContentAndType({
-      id: editForm.id,
-      content: editForm.content.trim(),
-      entryType: editForm.entryType,
-    })
-    if (res.data.code === 0) {
-      // 同步本地数据
-      const target = entries.value.find((e) => e.id === editForm.id)
-      if (target) {
-        target.content = editForm.content.trim()
-        target.entryType = editForm.entryType
-      }
-      editVisible.value = false
-      showToast({ type: 'success', message: '已更新' })
-    } else {
-      showToast({ type: 'fail', message: '更新失败' })
-    }
-  } finally {
-    saving.value = false
-  }
-}
+const { editVisible, saving, editForm, currentEditPlaceholder, currentEditColor, openEdit, submitEdit } =
+  useEntryEdit(entries)
 
 // 首次加载及日期变化时重新拉取
 fetchEntries()
-
-function formatEntryTime(createTime?: string): string {
-  if (!createTime) return ''
-  const d = new Date(createTime)
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
 
 // 暴露方法供父组件调用
 defineExpose({ refresh: fetchEntries, entries })
@@ -252,36 +185,6 @@ defineExpose({ refresh: fetchEntries, entries })
   display: flex;
   justify-content: center;
   padding: 2.5rem 0;
-}
-
-.daily-entries__swipe-cell {
-  border-bottom: 0.5px solid var(--color-border-light);
-  background: #fff;
-}
-
-.daily-entries__swipe-cell:last-child {
-  border-bottom: none;
-}
-
-.daily-entries__delete-btn {
-  height: 100%;
-  width: 4.5rem;
-  font-size: 0.875rem;
-}
-
-/* Checkbox 对齐 */
-.entry-item :deep(.van-checkbox) {
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 0.1rem;
-}
-
-.entry-item :deep(.van-checkbox__icon) {
-  height: 1rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* 编辑弹层 */
@@ -309,5 +212,32 @@ defineExpose({ refresh: fetchEntries, entries })
   font-size: 0.9375rem;
   color: var(--color-text);
   font-family: var(--font-sans);
+}
+
+.edit-popup__completion {
+  margin-top: 1rem;
+  padding: 0.75rem 0.875rem;
+  background: var(--color-background-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.edit-popup__completion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+}
+
+.edit-popup__completion-label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+}
+
+.edit-popup__completion-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  transition: color 0.2s;
 }
 </style>

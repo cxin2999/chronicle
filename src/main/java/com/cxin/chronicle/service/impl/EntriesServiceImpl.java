@@ -78,11 +78,19 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
         // 执行更新
         Entries entries = new Entries();
         entries.setChecked(request.getChecked());
+        // 如果更新为已勾选，则同时设置完成百分比为100；如果更新为未勾选，则同时设置完成百分比为0
+        if (request.getChecked() != null) {
+            if (request.getChecked() == 1) {
+                entries.setCompletionRate(100);
+            } else if (request.getChecked() == 0) {
+                entries.setCompletionRate(0);
+            }
+        }
         return this.update(entries, queryWrapper);
     }
 
     @Override
-    public boolean updateContentAndType(User loginUser, EntriesUpdateContentAndTypeReq request) {
+    public boolean updateEntriesContent(User loginUser, EntriesContentUpdateReq request) {
         // 构建更新条件：当前用户 + 指定ID
         LambdaQueryWrapper<Entries> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Entries::getId, request.getId())
@@ -92,6 +100,16 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
         Entries entries = new Entries();
         entries.setContent(request.getContent());
         entries.setEntryType(request.getEntryType());
+        // 如果传入了完成百分比，则同时更新
+        if (request.getCompletionRate() != null) {
+            entries.setCompletionRate(request.getCompletionRate());
+            // 如果完成百分比为100，则自动勾选；否则取消勾选
+            if (request.getCompletionRate() == 100) {
+                entries.setChecked(1);
+            } else {
+                entries.setChecked(0);
+            }
+        }
         return this.update(entries, queryWrapper);
     }
 

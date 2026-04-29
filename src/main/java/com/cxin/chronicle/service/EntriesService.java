@@ -48,7 +48,7 @@ public interface EntriesService extends IService<Entries> {
      * @param request   更新请求
      * @return 是否更新成功
      */
-    boolean updateContentAndType(User loginUser, EntriesUpdateContentAndTypeReq request);
+    boolean updateEntriesContent(User loginUser, EntriesContentUpdateReq request);
 
     /**
      * 删除记录

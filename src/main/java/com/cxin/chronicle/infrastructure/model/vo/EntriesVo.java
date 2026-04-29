@@ -22,6 +22,9 @@ public class EntriesVo {
     @Schema(description = "是否勾选")
     private Integer checked;
 
+    @Schema(description = "完成百分比(0-100)")
+    private Integer completionRate;
+
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
 

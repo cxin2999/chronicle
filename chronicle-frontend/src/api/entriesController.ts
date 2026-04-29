@@ -86,12 +86,12 @@ export async function updateChecked(
   })
 }
 
-/** 更新记录内容和类型 POST /entries/update/content-and-type */
-export async function updateContentAndType(
-  body: API.EntriesUpdateContentAndTypeReq,
+/** 更新记录（内容、类型、完成百分比） POST /entries/update/content */
+export async function updateEntriesContent(
+  body: API.EntriesContentUpdateReq,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseBoolean>('/entries/update/content-and-type', {
+  return request<API.BaseResponseBoolean>('/entries/update/content', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
