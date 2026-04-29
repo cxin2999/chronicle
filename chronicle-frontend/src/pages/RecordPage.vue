@@ -167,7 +167,7 @@
           autosize
         />
 
-        <div v-if="editForm.entryType === 'Do'" class="edit-popup__completion">
+        <div v-if="editForm.entryType === EntryType.Do" class="edit-popup__completion">
           <div class="edit-popup__completion-header">
             <span class="edit-popup__completion-label">完成进度</span>
             <span class="edit-popup__completion-value" :style="{ color: currentEditColor }">{{ editForm.completionRate }}%</span>
@@ -209,7 +209,7 @@ import {
   queryHistoryEntries,
   updateChecked,
 } from '@/api/entriesController'
-import { ENTRY_TYPES } from '@/constants/entries'
+import { ENTRY_TYPES, EntryType } from '@/constants/entries'
 import defaultAvatar from '@/assets/default_avatar.png'
 import dayjs from 'dayjs'
 import EntryItem from '@/components/EntryItem.vue'
@@ -304,7 +304,7 @@ async function onRefresh() {
 }
 
 // =========== 输入 & 添加记录 ===========
-const selectedType = ref<string>('Do')
+const selectedType = ref<string>(EntryType.Do)
 const inputContent = ref('')
 const adding = ref(false)
 

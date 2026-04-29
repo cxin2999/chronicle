@@ -59,7 +59,7 @@
           autosize
         />
 
-        <div v-if="editForm.entryType === 'Do'" class="edit-popup__completion">
+        <div v-if="editForm.entryType === EntryType.Do" class="edit-popup__completion">
           <div class="edit-popup__completion-header">
             <span class="edit-popup__completion-label">完成进度</span>
             <span class="edit-popup__completion-value" :style="{ color: currentEditColor }"
@@ -99,7 +99,7 @@ import {
   queryDailyEntries,
   updateChecked,
 } from '@/api/entriesController'
-import { ENTRY_TYPES } from '@/constants/entries'
+import { ENTRY_TYPES, EntryType } from '@/constants/entries'
 import EntryItem from '@/components/EntryItem.vue'
 import { useEntryEdit } from '@/composables/useEntryEdit'
 

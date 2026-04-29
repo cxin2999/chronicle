@@ -1,30 +1,40 @@
 /**
+ * 记录类型枚举
+ */
+export enum EntryType {
+  Do = 'Do',
+  Idea = 'Idea',
+  Think = 'Think',
+  Rule = 'Rule',
+}
+
+/**
  * 记录类型枚举常量
  */
 export const ENTRY_TYPES = [
   {
-    value: 'Do',
+    value: EntryType.Do,
     label: 'Do',
     color: '#3B82F6',
     bgColor: 'rgba(59,130,246,0.10)',
     placeholder: '记录一件要做的事...',
   },
   {
-    value: 'Idea',
+    value: EntryType.Idea,
     label: 'Idea',
     color: '#F59E0B',
     bgColor: 'rgba(245,158,11,0.10)',
     placeholder: '写下一个想法...',
   },
   {
-    value: 'Think',
+    value: EntryType.Think,
     label: 'Think',
     color: '#8B5CF6',
     bgColor: 'rgba(139,92,246,0.10)',
     placeholder: '记录一个思考...',
   },
   {
-    value: 'Rule',
+    value: EntryType.Rule,
     label: 'Rule',
     color: '#22C55E',
     bgColor: 'rgba(34,197,94,0.10)',
