@@ -23,7 +23,7 @@
       />
     </header>
 
-    <!-- 中间：无限滚动记录列表（最新在底部，历史在上方） -->
+    <!-- 中间：无限滚动记录列表（最新在上方，历史在下方） -->
     <main
       class="page-body record-page__body"
       ref="scrollContainerRef"
@@ -40,30 +40,30 @@
 
         <template v-else>
           <!--
-            van-list direction="up"：
-            当滚动容器 scrollTop 接近 0 (offset 范围内) 时自动触发 load 事件，
+            van-list 默认 direction="down"：
+            当滚动容器接近底部时自动触发 load 事件，
             并将 v-model:loading 设为 true；
             scroller 指定真实滚动容器（main.record-page__body）。
           -->
           <van-list
             v-model:loading="loadingMore"
             :finished="noMoreHistory"
-            direction="up"
+            :disabled="loading || refreshing"
             :scroller="scrollContainerRef || undefined"
             :immediate-check="false"
             :offset="80"
             class="record-page__list"
             @load="loadOlderEntries"
           >
-            <!-- 自定义加载中提示（顶部） -->
+            <!-- 自定义加载中提示（底部） -->
             <template #loading>
               <div class="load-more-tip">
                 <van-loading size="1rem" color="#94a3b8" />
-                <span>加载历史中...</span>
+                <span>正在加载更早记录...</span>
               </div>
             </template>
 
-            <!-- 自定义全部加载完毕提示（顶部） -->
+            <!-- 自定义全部加载完毕提示（底部） -->
             <template #finished>
               <div class="no-more-tip">· 已加载全部历史记录 ·</div>
             </template>
@@ -235,8 +235,8 @@ const loginUserStore = useLoginUserStore()
 const loginUser = computed(() => loginUserStore.loginUser)
 
 // =========== 列表状态 ===========
-const PAGE_SIZE = 20
-const entries = ref<API.EntriesVo[]>([]) // 按时间正序（旧→新）排列
+const PAGE_SIZE = 15
+const entries = ref<API.EntriesVo[]>([]) // 按时间倒序（新→旧）排列
 const loading = ref(false)
 const loadingMore = ref(false)
 const noMoreHistory = ref(false)
@@ -244,15 +244,23 @@ const refreshing = ref(false)
 const scrollContainerRef = ref<HTMLElement | null>(null)
 
 // =========== 工具函数 ===========
-function sortAsc(data: API.EntriesVo[]): API.EntriesVo[] {
+function sortDesc(data: API.EntriesVo[]): API.EntriesVo[] {
   return [...data].sort(
-    (a, b) => new Date(a.createTime!).getTime() - new Date(b.createTime!).getTime(),
+    (a, b) => new Date(b.createTime!).getTime() - new Date(a.createTime!).getTime(),
   )
 }
 
-function scrollToBottom() {
+function scrollToTop() {
   const el = scrollContainerRef.value
-  if (el) el.scrollTop = el.scrollHeight
+  if (el) el.scrollTop = 0
+}
+
+async function loadLatestPage() {
+  const res = await queryHistoryEntries({ pageSize: PAGE_SIZE })
+  if (res.data.code === 0 && res.data.data) {
+    entries.value = sortDesc(res.data.data)
+    noMoreHistory.value = res.data.data.length < PAGE_SIZE
+  }
 }
 
 // =========== 初始化加载 ===========
@@ -260,44 +268,33 @@ async function loadInitial() {
   loading.value = true
   noMoreHistory.value = false
   try {
-    const res = await queryHistoryEntries({ pageSize: PAGE_SIZE })
-    if (res.data.code === 0 && res.data.data) {
-      entries.value = sortAsc(res.data.data)
-      if (res.data.data.length < PAGE_SIZE) noMoreHistory.value = true
-    }
+    await loadLatestPage()
   } finally {
     loading.value = false
     await nextTick()
-    scrollToBottom()
+    scrollToTop()
   }
 }
 
-// =========== 向上加载历史数据（prepend） ===========
-// 由 van-list direction="up" 触发，触发时 loadingMore 已被 van-list 设为 true
+// =========== 向下加载历史数据（append） ===========
+// 由 van-list 默认 direction="down" 触发，触发时 loadingMore 已被 van-list 设为 true
 async function loadOlderEntries() {
   if (noMoreHistory.value || entries.value.length === 0) {
     loadingMore.value = false
     return
   }
 
-  const el = scrollContainerRef.value
-  // 在任何 await 之前同步捕获高度（loading slot 尚未渲染到 DOM）
-  const prevScrollHeight = el?.scrollHeight ?? 0
-  const cursor = entries.value[0]?.createTime
+  const cursor = entries.value[entries.value.length - 1]?.createTime
 
   try {
     const res = await queryHistoryEntries({ pageSize: PAGE_SIZE, lastCreateTime: cursor })
     if (res.data.code === 0 && res.data.data) {
-      const older = sortAsc(res.data.data)
+      const older = sortDesc(res.data.data)
       if (older.length < PAGE_SIZE) noMoreHistory.value = true
       if (older.length > 0) {
-        // 关键：在同一同步块内同时更新数据并关闭 loading，
-        // Vue 会把「新增条目」+「移除 loading slot」合并到同一次 nextTick 渲染，
-        // 使得 scrollHeight 的增量 = 纯新增条目高度，loading slot 的高度变化相互抵消。
-        entries.value = [...older, ...entries.value]
+        // 新顺序是新→旧，历史数据追加到列表底部。
+        entries.value = [...entries.value, ...older]
         loadingMore.value = false
-        await nextTick()
-        if (el) el.scrollTop += el.scrollHeight - prevScrollHeight
         return // 正常退出，跳过 finally 中的重复赋值
       }
     }
@@ -312,15 +309,12 @@ async function loadOlderEntries() {
 // =========== 下拉刷新：重新加载最新数据 ===========
 async function onRefresh() {
   try {
-    const res = await queryHistoryEntries({ pageSize: PAGE_SIZE })
-    if (res.data.code === 0 && res.data.data) {
-      entries.value = sortAsc(res.data.data)
-      noMoreHistory.value = res.data.data.length < PAGE_SIZE
-    }
+    noMoreHistory.value = false
+    await loadLatestPage()
   } finally {
     refreshing.value = false
     await nextTick()
-    scrollToBottom()
+    scrollToTop()
   }
 }
 
@@ -337,25 +331,25 @@ const currentColor = computed(
 )
 
 /**
- * 追加最新条目到列表底部，不替换已加载的历史数据。
- * 通过 ID 去重，只将后端返回中本地不存在的条目 append 到末尾。
+ * 追加最新条目到列表顶部，不替换已加载的历史数据。
+ * 通过 ID 去重，只将后端返回中本地不存在的条目 prepend 到开头。
  */
 async function appendLatestEntries() {
   const today = dayjs().format('YYYY-MM-DD')
   const res = await queryDailyEntries({ date: today })
   if (res.data.code === 0 && res.data.data) {
-    const latest = sortAsc(res.data.data)
+    const latest = sortDesc(res.data.data)
     if (entries.value.length === 0) {
       entries.value = latest
     } else {
       const existingIds = new Set(entries.value.map((e) => e.id))
       const newEntries = latest.filter((e) => !existingIds.has(e.id))
       if (newEntries.length > 0) {
-        entries.value = [...entries.value, ...newEntries]
+        entries.value = [...newEntries, ...entries.value]
       }
     }
     await nextTick()
-    scrollToBottom()
+    scrollToTop()
   }
 }
 
