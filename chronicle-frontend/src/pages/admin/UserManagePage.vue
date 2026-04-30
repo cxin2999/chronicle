@@ -27,9 +27,9 @@
               placeholder="输入用户名"
               class="search-input"
             />
-            <div style="margin: 16px 0;">
+            <div style="margin: 16px 0">
               <van-button round type="primary" native-type="submit" class="search-btn">
-                <van-icon name="search" style="margin-right: 4px;" />
+                <van-icon name="search" style="margin-right: 4px" />
                 搜索
               </van-button>
             </div>
@@ -39,12 +39,7 @@
         <van-divider />
 
         <!-- 列表 -->
-        <van-list
-          :finished="finished"
-          finished-text="没有更多了"
-          @load="onLoad"
-          class="user-list"
-        >
+        <van-list :finished="finished" finished-text="没有更多了" @load="onLoad" class="user-list">
           <div v-for="item in data" :key="item.id" class="user-item">
             <div class="user-info">
               <van-image
@@ -65,7 +60,9 @@
             </div>
             <div class="user-meta">
               <div class="user-profile">{{ item.userProfile }}</div>
-              <div class="time-text">{{ dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss') }}</div>
+              <div class="time-text">
+                {{ dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+              </div>
             </div>
             <div class="user-actions">
               <van-popconfirm

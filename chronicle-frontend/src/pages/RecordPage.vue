@@ -24,15 +24,8 @@
     </header>
 
     <!-- 中间：无限滚动记录列表（最新在上方，历史在下方） -->
-    <main
-      class="page-body record-page__body"
-      ref="scrollContainerRef"
-    >
-      <van-pull-refresh
-        v-model="refreshing"
-        @refresh="onRefresh"
-        class="record-page__pull-refresh"
-      >
+    <main class="page-body record-page__body" ref="scrollContainerRef">
+      <van-pull-refresh v-model="refreshing" @refresh="onRefresh" class="record-page__pull-refresh">
         <!-- 初始加载中 -->
         <div v-if="loading" class="list-center-tip">
           <van-loading size="1.5rem" color="var(--color-primary)" />
@@ -77,7 +70,9 @@
             <template v-for="(entry, index) in entries" :key="entry.id">
               <!-- 日期分组标题 -->
               <div v-if="shouldShowDateHeader(index)" class="date-group-header">
-                <span class="date-group-header__label">{{ formatEntryDate(entry.createTime) }}</span>
+                <span class="date-group-header__label">{{
+                  formatEntryDate(entry.createTime)
+                }}</span>
               </div>
 
               <!-- 记录条目（左滑删除） -->
@@ -170,7 +165,9 @@
         <div v-if="editForm.entryType === EntryType.Do" class="edit-popup__completion">
           <div class="edit-popup__completion-header">
             <span class="edit-popup__completion-label">完成进度</span>
-            <span class="edit-popup__completion-value" :style="{ color: currentEditColor }">{{ editForm.completionRate }}%</span>
+            <span class="edit-popup__completion-value" :style="{ color: currentEditColor }"
+              >{{ editForm.completionRate }}%</span
+            >
           </div>
           <van-slider
             v-model="editForm.completionRate"
@@ -401,8 +398,15 @@ async function handleDelete(entry: API.EntriesVo) {
 }
 
 // =========== 编辑记录 ===========
-const { editVisible, saving, editForm, currentEditPlaceholder, currentEditColor, openEdit, submitEdit } =
-  useEntryEdit(entries)
+const {
+  editVisible,
+  saving,
+  editForm,
+  currentEditPlaceholder,
+  currentEditColor,
+  openEdit,
+  submitEdit,
+} = useEntryEdit(entries)
 
 // =========== 日期分组 ===========
 function getEntryDay(createTime?: string): string {
@@ -412,7 +416,10 @@ function getEntryDay(createTime?: string): string {
 
 function shouldShowDateHeader(index: number): boolean {
   if (index === 0) return true
-  return getEntryDay(entries.value[index]?.createTime) !== getEntryDay(entries.value[index - 1]?.createTime)
+  return (
+    getEntryDay(entries.value[index]?.createTime) !==
+    getEntryDay(entries.value[index - 1]?.createTime)
+  )
 }
 
 function formatEntryDate(createTime?: string): string {

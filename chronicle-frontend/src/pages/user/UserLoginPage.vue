@@ -1,16 +1,12 @@
 <template>
   <div id="userLoginPage">
     <div class="auth-container">
-
       <div class="form-section">
         <div class="form-card">
           <h2 class="form-title">欢迎回来</h2>
           <p class="form-subtitle">登录您的账号</p>
 
-          <van-form
-            @submit="handleSubmit"
-            class="login-form"
-          >
+          <van-form @submit="handleSubmit" class="login-form">
             <van-field
               v-model="formState.userAccount"
               name="userAccount"
@@ -40,8 +36,15 @@
               </template>
             </van-field>
 
-            <div style="margin: 16px 0;">
-              <van-button round block type="primary" native-type="submit" size="large" class="submit-btn">
+            <div style="margin: 16px 0">
+              <van-button
+                round
+                block
+                type="primary"
+                native-type="submit"
+                size="large"
+                class="submit-btn"
+              >
                 登录
               </van-button>
             </div>

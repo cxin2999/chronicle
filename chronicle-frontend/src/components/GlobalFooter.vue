@@ -2,13 +2,7 @@
   <div class="footer">
     <div class="footer-content">
       <p class="copyright">
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          class="author-link"
-        >
-          cxin2999@gmail.com
-        </a>
+        <a target="_blank" rel="noopener noreferrer" class="author-link"> cxin2999@gmail.com </a>
       </p>
     </div>
   </div>

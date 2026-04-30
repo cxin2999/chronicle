@@ -10,17 +10,13 @@
 
       <!-- 年份导航胶囊 -->
       <div class="year-nav">
-        <button
-          class="year-nav__arrow"
-          :disabled="currentYear <= MIN_YEAR"
-          @click="prevYear"
-        >‹</button>
+        <button class="year-nav__arrow" :disabled="currentYear <= MIN_YEAR" @click="prevYear">
+          ‹
+        </button>
         <span class="year-nav__label">{{ currentYear }} 年</span>
-        <button
-          class="year-nav__arrow"
-          :disabled="currentYear >= thisYear"
-          @click="nextYear"
-        >›</button>
+        <button class="year-nav__arrow" :disabled="currentYear >= thisYear" @click="nextYear">
+          ›
+        </button>
       </div>
     </header>
 
@@ -221,7 +217,9 @@ const formatSelectedDate = computed(() => {
   line-height: 1;
   font-weight: 300;
   color: var(--color-text-secondary);
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
   -webkit-tap-highlight-color: transparent;
   padding: 0;
 }
@@ -337,7 +335,7 @@ const formatSelectedDate = computed(() => {
 
 /* 周末颜色（在 today / has-record 之前声明，优先级更低） */
 .day-cell--weekend {
-  color: #FF3B30;
+  color: #ff3b30;
 }
 
 /* today 覆盖 weekend */
@@ -352,7 +350,7 @@ const formatSelectedDate = computed(() => {
   width: 0.25rem;
   height: 0.25rem;
   border-radius: 50%;
-  background: #FF3B30;
+  background: #ff3b30;
   flex-shrink: 0;
 }
 

@@ -94,11 +94,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { showToast } from 'vant'
-import {
-  deleteEntry,
-  queryDailyEntries,
-  updateChecked,
-} from '@/api/entriesController'
+import { deleteEntry, queryDailyEntries, updateChecked } from '@/api/entriesController'
 import { ENTRY_TYPES, EntryType } from '@/constants/entries'
 import EntryItem from '@/components/EntryItem.vue'
 import { useEntryEdit } from '@/composables/useEntryEdit'
@@ -166,8 +162,15 @@ async function handleDelete(entry: API.EntriesVo) {
 }
 
 // -------- 编辑 --------
-const { editVisible, saving, editForm, currentEditPlaceholder, currentEditColor, openEdit, submitEdit } =
-  useEntryEdit(entries)
+const {
+  editVisible,
+  saving,
+  editForm,
+  currentEditPlaceholder,
+  currentEditColor,
+  openEdit,
+  submitEdit,
+} = useEntryEdit(entries)
 
 // 首次加载及日期变化时重新拉取
 fetchEntries()
