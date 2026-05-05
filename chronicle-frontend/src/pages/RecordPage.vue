@@ -1,26 +1,38 @@
 <template>
   <div class="record-page mobile-page">
-    <!-- 头部：头像 + 标题 + 搜索 -->
+    <!-- 头部：头像 + 标题 + 今日计数 + 搜索 -->
     <header class="record-page__header page-header">
       <div class="record-page__avatar" @click="goToProfile">
         <van-image
           round
           fit="cover"
           :src="loginUser.userAvatar || defaultAvatar"
-          width="2.25rem"
-          height="2.25rem"
+          width="2.125rem"
+          height="2.125rem"
           class="avatar-img"
         />
       </div>
-      <span class="page-header__title">记录</span>
-      <van-button
-        icon="search"
-        size="small"
-        plain
-        :border="false"
-        class="record-page__search-btn"
-        @click="goToHistory"
-      />
+      <div class="record-page__header-center">
+        <span class="page-header__title">记录</span>
+      </div>
+      <div class="record-page__header-actions">
+        <van-button
+          icon="search"
+          size="small"
+          plain
+          :border="false"
+          class="record-page__search-btn"
+          @click="goToSearch"
+        />
+        <van-button
+          icon="idcard"
+          size="small"
+          plain
+          :border="false"
+          class="record-page__search-btn"
+          @click="goToHistory"
+        />
+      </div>
     </header>
 
     <!-- 中间：无限滚动记录列表（最新在上方，历史在下方） -->
@@ -32,12 +44,6 @@
         </div>
 
         <template v-else>
-          <!--
-            van-list 默认 direction="down"：
-            当滚动容器接近底部时自动触发 load 事件，
-            并将 v-model:loading 设为 true；
-            scroller 指定真实滚动容器（main.record-page__body）。
-          -->
           <van-list
             v-model:loading="loadingMore"
             :finished="noMoreHistory"
@@ -51,28 +57,36 @@
             <!-- 自定义加载中提示（底部） -->
             <template #loading>
               <div class="load-more-tip">
-                <van-loading size="1rem" color="#94a3b8" />
-                <span>正在加载更早记录...</span>
+                <van-loading size="0.875rem" color="var(--color-text-muted)" />
+                <span>加载更早记录…</span>
               </div>
             </template>
 
             <!-- 自定义全部加载完毕提示（底部） -->
             <template #finished>
-              <div class="no-more-tip">· 已加载全部历史记录 ·</div>
+              <div class="no-more-tip">
+                <van-divider class="no-more-divider">已是最早记录</van-divider>
+              </div>
             </template>
 
             <!-- 空状态 -->
-            <div v-if="entries.length === 0" class="list-center-tip">
-              <van-empty description="暂无记录" image-size="5rem" />
+            <div v-if="entries.length === 0" class="list-center-tip list-empty">
+              <van-empty description="还没有记录，写下今天的第一条吧" image-size="6rem" />
             </div>
+
+            <!-- 列表顶部内边距 -->
+            <div class="list-top-spacer" />
 
             <!-- 按日期分组渲染所有记录 -->
             <template v-for="(entry, index) in entries" :key="entry.id">
               <!-- 日期分组标题 -->
               <div v-if="shouldShowDateHeader(index)" class="date-group-header">
-                <span class="date-group-header__label">{{
-                  formatEntryDate(entry.createTime)
-                }}</span>
+                <van-icon name="notes-o" class="date-group-header__icon" />
+                <span class="date-group-header__label">{{ formatEntryDate(entry.createTime) }}</span>
+                <span
+                  v-if="isToday(entry.createTime)"
+                  class="date-group-header__today"
+                >今天</span>
               </div>
 
               <!-- 记录条目（左滑删除） -->
@@ -83,6 +97,9 @@
                 @toggle-checked="(val: boolean) => handleToggleChecked(entry, val)"
               />
             </template>
+
+            <!-- 列表底部内边距 -->
+            <div class="list-bottom-spacer" />
           </van-list>
         </template>
       </van-pull-refresh>
@@ -90,8 +107,8 @@
 
     <!-- 底部：输入区域 -->
     <footer class="record-page__input-bar">
-      <!-- 类型选择 Segmented Pills -->
-      <div class="type-pills" style="margin-bottom: 0.625rem">
+      <!-- 类型选择胶囊 -->
+      <div class="type-pills">
         <button
           v-for="t in ENTRY_TYPES"
           :key="t.value"
@@ -105,7 +122,7 @@
       </div>
 
       <!-- 输入行 -->
-      <div class="record-page__input-row">
+      <div class="record-page__input-row" :style="{ '--input-accent': currentColor }">
         <van-field
           v-model="inputContent"
           :placeholder="currentPlaceholder"
@@ -127,7 +144,7 @@
       </div>
     </footer>
 
-    <!-- 编辑底部弹层（从 DailyEntries 迁移） -->
+    <!-- 编辑底部弹层 -->
     <van-popup
       v-model:show="editVisible"
       position="bottom"
@@ -414,6 +431,11 @@ function getEntryDay(createTime?: string): string {
   return dayjs(createTime).format('YYYY-MM-DD')
 }
 
+function isToday(createTime?: string): boolean {
+  if (!createTime) return false
+  return dayjs(createTime).isSame(dayjs(), 'day')
+}
+
 function shouldShowDateHeader(index: number): boolean {
   if (index === 0) return true
   return (
@@ -438,6 +460,10 @@ function goToHistory() {
   router.push('/history')
 }
 
+function goToSearch() {
+  router.push('/search')
+}
+
 // =========== 初始化 ===========
 loadInitial()
 </script>
@@ -445,9 +471,25 @@ loadInitial()
 <style scoped>
 /* ======= Header ======= */
 .record-page__header {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.record-page__header-center {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.today-count-tag {
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  padding: 0 0.4375rem !important;
+  height: 1.25rem !important;
+  line-height: 1.25rem !important;
+  opacity: 0.9;
+  letter-spacing: 0.01em;
 }
 
 .record-page__avatar {
@@ -455,6 +497,7 @@ loadInitial()
   transition: opacity var(--transition-fast);
   border-radius: 50%;
   overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
 }
 
 .record-page__avatar:active {
@@ -483,9 +526,15 @@ loadInitial()
   background: rgba(120, 120, 128, 0.2) !important;
 }
 
+.record-page__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
 /* ======= 内容区 ======= */
 .record-page__body {
-  background: var(--color-background-tertiary);
+  background: #F4F4F8;
   overflow-anchor: none;
 }
 
@@ -493,46 +542,80 @@ loadInitial()
   min-height: 100%;
 }
 
-/* ======= 日期分组标题（Apple 风格，左对齐节标题） ======= */
+.record-page__list {
+  padding-bottom: 0.5rem;
+}
+
+/* 顶部 / 底部留白 */
+.list-top-spacer {
+  height: 0.5rem;
+}
+.list-bottom-spacer {
+  height: 0.75rem;
+}
+
+/* ======= 日期分组标题 ======= */
 .date-group-header {
-  padding: 1.125rem 1rem 0.3125rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 1rem 1.25rem 0.375rem;
+}
+
+.date-group-header__icon {
+  font-size: 0.875rem !important;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
 .date-group-header__label {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.055em;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.03em;
   font-family: var(--font-sans);
+}
+
+.date-group-header__today {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: rgba(34, 197, 94, 0.12);
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
 }
 
 /* ======= 加载状态提示 ======= */
 .list-center-tip {
   display: flex;
   justify-content: center;
-  padding: 2.5rem 0;
+  padding: 3rem 0;
+}
+
+.list-empty {
+  padding-top: 4rem;
 }
 
 .load-more-tip {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1rem;
-  font-size: 0.8125rem;
+  gap: 0.4375rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   font-family: var(--font-sans);
 }
 
 .no-more-tip {
-  display: flex;
-  justify-content: center;
-  padding: 0.875rem 1rem;
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-  letter-spacing: 0.06em;
-  font-family: var(--font-sans);
+  padding: 0 1.25rem 0.25rem;
+}
+
+.no-more-divider {
+  font-size: 0.6875rem !important;
+  color: var(--color-text-muted) !important;
+  border-color: var(--color-border-light) !important;
 }
 
 /* ======= 编辑弹层 ======= */
@@ -547,7 +630,7 @@ loadInitial()
 }
 
 .edit-popup__field {
-  background: rgba(120, 120, 128, 0.08);
+  background: rgba(120, 120, 128, 0.07);
   border-radius: var(--radius-lg);
 }
 
@@ -565,7 +648,7 @@ loadInitial()
 .edit-popup__completion {
   margin-top: 1rem;
   padding: 0.75rem 0.875rem;
-  background: var(--color-background-tertiary);
+  background: rgba(120, 120, 128, 0.05);
   border-radius: var(--radius-md);
 }
 
@@ -592,11 +675,48 @@ loadInitial()
 /* ======= 底部输入区 ======= */
 .record-page__input-bar {
   flex-shrink: 0;
-  padding: 0.625rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  padding: 0.5rem 0.875rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-top: 0.5px solid var(--color-separator);
+}
+
+/* 类型选择胶囊 */
+.type-pills {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+
+.type-pill {
+  height: 1.625rem;
+  padding: 0 0.625rem;
+  border-radius: var(--radius-full);
+  border: 1.5px solid transparent;
+  background: rgba(120, 120, 128, 0.08);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.01em;
+}
+
+.type-pill.active {
+  background: color-mix(in srgb, var(--pill-color) 15%, transparent);
+  border-color: var(--pill-color);
+  color: var(--pill-color);
+  font-weight: 600;
+}
+
+.type-pill:active {
+  opacity: 0.7;
 }
 
 /* 输入行 */
@@ -604,10 +724,13 @@ loadInitial()
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(120, 120, 128, 0.08);
+  background: rgba(120, 120, 128, 0.07);
   border-radius: var(--radius-xl);
-  padding: 0 0.375rem 0 0;
-  transition: background var(--transition-fast);
+  border: 1.5px solid color-mix(in srgb, var(--input-accent, var(--color-primary)) 20%, transparent);
+  padding: 0 0.3125rem 0 0;
+  transition:
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .record-page__field {
@@ -630,16 +753,19 @@ loadInitial()
 /* 添加按钮 */
 .record-page__add-btn {
   flex-shrink: 0;
-  width: 2.125rem !important;
-  height: 2.125rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
   min-width: unset !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--input-accent, var(--color-primary)) 35%, transparent) !important;
   transition:
     transform var(--transition-fast),
-    opacity var(--transition-fast) !important;
+    opacity var(--transition-fast),
+    box-shadow var(--transition-fast) !important;
 }
 
 .record-page__add-btn:active {
-  transform: scale(0.88) !important;
+  transform: scale(0.86) !important;
   opacity: 0.85 !important;
+  box-shadow: none !important;
 }
 </style>

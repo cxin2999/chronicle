@@ -3,12 +3,14 @@ package com.cxin.chronicle.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cxin.chronicle.infrastructure.convert.EntriesConvert;
+import com.cxin.chronicle.infrastructure.model.document.EntriesDocument;
 import com.cxin.chronicle.infrastructure.model.dto.entries.*;
 import com.cxin.chronicle.infrastructure.model.entity.Entries;
 import com.cxin.chronicle.infrastructure.model.entity.User;
 import com.cxin.chronicle.infrastructure.model.vo.EntriesVo;
 import com.cxin.chronicle.infrastructure.model.vo.HeatmapDataVo;
 import com.cxin.chronicle.mapper.EntriesMapper;
+import com.cxin.chronicle.service.EntriesEsSearchService;
 import com.cxin.chronicle.service.EntriesService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -32,13 +34,29 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
     @Resource
     private EntriesConvert entriesConvert;
 
+    @Resource
+    private EntriesEsSearchService entriesEsSearchService;
+
     @Override
     public boolean addEntries(User loginUser, EntriesAddReq request) {
         Entries entries = new Entries();
         entries.setEntryType(request.getEntryType());
         entries.setContent(request.getContent());
         entries.setUserId(loginUser.getId());
-        return this.save(entries);
+        boolean result = this.save(entries);
+        
+        // 双写：同步到 ES
+        if (result) {
+            try {
+                EntriesDocument document = entriesConvert.entryToDocument(entries);
+                entriesEsSearchService.saveDocument(document);
+            } catch (Exception e) {
+                // 记录日志，但不影响主流程
+                System.err.println("同步写入ES失败: " + e.getMessage());
+            }
+        }
+        
+        return result;
     }
 
     @Override
@@ -86,7 +104,24 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
                 entries.setCompletionRate(0);
             }
         }
-        return this.update(entries, queryWrapper);
+        boolean result = this.update(entries, queryWrapper);
+        
+        // 双写：同步到 ES
+        if (result) {
+            try {
+                // 查询最新的记录
+                Entries updatedEntry = this.getById(request.getId());
+                if (updatedEntry != null) {
+                    EntriesDocument document = entriesConvert.entryToDocument(updatedEntry);
+                    entriesEsSearchService.saveDocument(document);
+                }
+            } catch (Exception e) {
+                // 记录日志，但不影响主流程
+                System.err.println("同步更新ES失败: " + e.getMessage());
+            }
+        }
+        
+        return result;
     }
 
     @Override
@@ -110,7 +145,24 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
                 entries.setChecked(0);
             }
         }
-        return this.update(entries, queryWrapper);
+        boolean result = this.update(entries, queryWrapper);
+        
+        // 双写：同步到 ES
+        if (result) {
+            try {
+                // 查询最新的记录
+                Entries updatedEntry = this.getById(request.getId());
+                if (updatedEntry != null) {
+                    EntriesDocument document = entriesConvert.entryToDocument(updatedEntry);
+                    entriesEsSearchService.saveDocument(document);
+                }
+            } catch (Exception e) {
+                // 记录日志，但不影响主流程
+                System.err.println("同步更新ES失败: " + e.getMessage());
+            }
+        }
+        
+        return result;
     }
 
     @Override
@@ -121,7 +173,24 @@ public class EntriesServiceImpl extends ServiceImpl<EntriesMapper, Entries> impl
                 .eq(Entries::getUserId, loginUser.getId());
 
         // 执行逻辑删除（由于实体类使用了@TableLogic注解）
-        return this.remove(queryWrapper);
+        boolean result = this.remove(queryWrapper);
+        
+        // 双写：同步到 ES
+        if (result) {
+            try {
+                // 逻辑删除时，更新ES中的isDelete字段为true
+                Entries deletedEntry = this.getById(request.getId());
+                if (deletedEntry != null) {
+                    EntriesDocument document = entriesConvert.entryToDocument(deletedEntry);
+                    entriesEsSearchService.saveDocument(document);
+                }
+            } catch (Exception e) {
+                // 记录日志，但不影响主流程
+                System.err.println("同步删除ES失败: " + e.getMessage());
+            }
+        }
+        
+        return result;
     }
 
     @Override

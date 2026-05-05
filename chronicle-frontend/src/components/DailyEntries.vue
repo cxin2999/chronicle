@@ -33,18 +33,7 @@
         <div class="edit-popup__title">编辑记录</div>
 
         <!-- 类型选择 -->
-        <div class="type-pills" style="margin-bottom: 0.875rem">
-          <button
-            v-for="t in ENTRY_TYPES"
-            :key="t.value"
-            class="type-pill"
-            :class="{ active: editForm.entryType === t.value }"
-            :style="{ '--pill-color': t.color }"
-            @click="editForm.entryType = t.value"
-          >
-            {{ t.label }}
-          </button>
-        </div>
+        <EntryTypePills v-model="editForm.entryType" style="margin-bottom: 0.875rem" />
 
         <!-- 内容编辑框 -->
         <van-field
@@ -95,8 +84,9 @@
 import { ref } from 'vue'
 import { showToast } from 'vant'
 import { deleteEntry, queryDailyEntries, updateChecked } from '@/api/entriesController'
-import { ENTRY_TYPES, EntryType } from '@/constants/entries'
+import { EntryType } from '@/constants/entries'
 import EntryItem from '@/components/EntryItem.vue'
+import EntryTypePills from '@/components/EntryTypePills.vue'
 import { useEntryEdit } from '@/composables/useEntryEdit'
 
 const props = defineProps<{

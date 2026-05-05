@@ -1,5 +1,6 @@
 import RecordPage from '@/pages/RecordPage.vue'
 import HistoryPage from '@/pages/HistoryPage.vue'
+import SearchPage from '@/pages/SearchPage.vue'
 import ProfilePage from '@/pages/ProfilePage.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import UserLoginPage from '@/pages/user/UserLoginPage.vue'
@@ -22,6 +23,11 @@ const router = createRouter({
       path: '/history',
       name: '历史',
       component: HistoryPage,
+    },
+    {
+      path: '/search',
+      name: '搜索',
+      component: SearchPage,
     },
     {
       path: '/profile',

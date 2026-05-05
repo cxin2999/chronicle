@@ -25,6 +25,17 @@ spring:
       port: 6379
       password: <your password>
       database: 0
+  elasticsearch:
+    uris: <your url>:9200
+    username: elastic
+    password: <your password>
+    connection-timeout: 5s
+    socket-timeout: 10s
+
+# Elasticsearch 索引配置
+elasticsearch:
+  index:
+    entries: entries_index_local
 
 # springdoc-openapi 配置
 springdoc:

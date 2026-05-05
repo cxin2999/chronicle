@@ -5,6 +5,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseInteger = {
+    code?: number
+    data?: number
+    message?: string
+  }
+
   type BaseResponseListEntriesVo = {
     code?: number
     data?: EntriesVo[]
@@ -20,6 +26,12 @@ declare namespace API {
   type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
+    message?: string
+  }
+
+  type BaseResponsePageResponseEntriesVo = {
+    code?: number
+    data?: PageResponseEntriesVo
     message?: string
   }
 
@@ -84,6 +96,17 @@ declare namespace API {
     date: string
   }
 
+  type EntriesSearchReq = {
+    pageNum?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    /** 关键字 */
+    keyword?: string
+    /** 记录类型 枚举值:Do/Idea/Think/Rule */
+    entryType?: string
+  }
+
   type EntriesUpdateCheckedReq = {
     /** 记录ID */
     id: string
@@ -139,6 +162,19 @@ declare namespace API {
   type OrderItem = {
     column?: string
     asc?: boolean
+  }
+
+  type PageResponseEntriesVo = {
+    /** 数据列表 */
+    records?: EntriesVo[]
+    /** 总记录数 */
+    total?: number
+    /** 当前页码 */
+    pageNum?: number
+    /** 每页大小 */
+    pageSize?: number
+    /** 总页数 */
+    pages?: number
   }
 
   type PageUserVO = {

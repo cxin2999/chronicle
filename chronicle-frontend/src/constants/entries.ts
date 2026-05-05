@@ -17,7 +17,7 @@ export const ENTRY_TYPES = [
     label: 'Do',
     color: '#3B82F6',
     bgColor: 'rgba(59,130,246,0.10)',
-    placeholder: '记录一件要做的事...',
+    placeholder: '记录一件事...',
   },
   {
     value: EntryType.Idea,
