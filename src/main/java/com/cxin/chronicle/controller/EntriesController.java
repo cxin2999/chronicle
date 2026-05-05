@@ -9,7 +9,7 @@ import com.cxin.chronicle.infrastructure.model.entity.User;
 import com.cxin.chronicle.infrastructure.model.vo.EntriesVo;
 import com.cxin.chronicle.infrastructure.model.vo.HeatmapDataVo;
 import com.cxin.chronicle.infrastructure.model.vo.PageResponse;
-import com.cxin.chronicle.service.EntriesEsSearchService;
+import com.cxin.chronicle.service.EntriesEsService;
 import com.cxin.chronicle.service.EntriesService;
 import com.cxin.chronicle.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +37,7 @@ public class EntriesController {
     @Resource
     private UserService userService;
     @Resource
-    private EntriesEsSearchService entriesEsSearchService;
+    private EntriesEsService entriesEsService;
 
     @PostMapping("/add")
     @Operation(summary = "添加记录")
@@ -111,7 +111,7 @@ public class EntriesController {
     @AuthCheck(mustRole = UserConstant.DEFAULT_ROLE)
     public BaseResponse<PageResponse<EntriesVo>> advancedSearch(@RequestBody @Valid EntriesSearchReq request, HttpServletRequest httpServletRequest) {
         User loginUser = userService.getCurrentUser(httpServletRequest);
-        PageResponse<EntriesVo> pageResponse = entriesEsSearchService.advancedSearch(loginUser.getId(), request);
+        PageResponse<EntriesVo> pageResponse = entriesEsService.advancedSearch(loginUser.getId(), request);
         return ResultUtils.success(pageResponse);
     }
 }

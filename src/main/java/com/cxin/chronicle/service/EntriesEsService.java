@@ -4,9 +4,12 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.cxin.chronicle.infrastructure.convert.EntriesConvert;
 import com.cxin.chronicle.infrastructure.model.document.EntriesDocument;
 import com.cxin.chronicle.infrastructure.model.dto.entries.EntriesSearchReq;
+import com.cxin.chronicle.infrastructure.model.entity.Entries;
 import com.cxin.chronicle.infrastructure.model.vo.EntriesVo;
 import com.cxin.chronicle.infrastructure.model.vo.PageResponse;
+import com.cxin.chronicle.mapper.EntriesMapper;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,14 +31,18 @@ import java.util.stream.Collectors;
  * @author Charles Chen
  * @since 2026-05-03
  */
+@Slf4j
 @Service
-public class EntriesEsSearchService {
+public class EntriesEsService {
 
     @Resource
     private com.cxin.chronicle.repository.EntriesRepository entriesRepository;
 
     @Resource
     private ElasticsearchOperations elasticsearchOperations;
+
+    @Resource
+    private EntriesMapper entriesMapper;
 
     @Resource
     private EntriesConvert entriesConvert;
@@ -129,7 +136,7 @@ public class EntriesEsSearchService {
     public PageResponse<EntriesVo> advancedSearch(String userId, EntriesSearchReq request) {
         int pageNum = request.getPageNum() > 0 ? request.getPageNum() : 1;
         int pageSize = request.getPageSize() > 0 ? request.getPageSize() : 10;
-        
+
         Sort sort = buildSort(request.getSortField(), request.getSortOrder());
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
@@ -146,7 +153,7 @@ public class EntriesEsSearchService {
                                     .value(Long.parseLong(userId))
                             )
                     );
-                    
+
                     b.must(m -> m
                             .term(t -> t
                                     .field("isDelete")
@@ -211,11 +218,11 @@ public class EntriesEsSearchService {
         if (sortField == null || sortField.isEmpty()) {
             sortField = "createTime";
         }
-        
-        Sort.Direction direction = "ascend".equalsIgnoreCase(sortOrder) 
-                ? Sort.Direction.ASC 
+
+        Sort.Direction direction = "ascend".equalsIgnoreCase(sortOrder)
+                ? Sort.Direction.ASC
                 : Sort.Direction.DESC;
-        
+
         return Sort.by(direction, sortField);
     }
 
@@ -257,4 +264,62 @@ public class EntriesEsSearchService {
     public EntriesDocument getDocumentById(Long id) {
         return entriesRepository.findById(id).orElse(null);
     }
+
+
+    /**
+     * ES异步方式同步数据（不阻塞主流程）
+     *
+     * @param id 项目路径
+     */
+    public void syncDataToEs(String id) {
+        // 在单独的线程中执行构建，避免阻塞主流程
+        Thread.ofVirtual().name("entry-sync-" + System.currentTimeMillis()).start(() -> {
+            try {
+                syncEntryToEs(id);
+            } catch (Exception e) {
+                log.error("异步同步记录时发生异常: {}", e.getMessage(), e);
+            }
+        });
+    }
+
+    public void syncEntryToEs(String id) {
+        try {
+            // 查询最新的记录
+            Entries updatedEntry = entriesMapper.selectById(id);
+            if (updatedEntry != null) {
+                EntriesDocument document = entriesConvert.entryToDocument(updatedEntry);
+                this.saveDocument(document);
+            }
+        } catch (Exception e) {
+            // 记录日志，但不影响主流程
+            System.err.println("同步更新ES失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * ES异步方式删除数据（不阻塞主流程）
+     *
+     * @param id 项目路径
+     */
+    public void syncDeleteEntryFromEs(String id) {
+        // 在单独的线程中执行构建，避免阻塞主流程
+        Thread.ofVirtual().name("entry-sync-" + System.currentTimeMillis()).start(() -> {
+            try {
+                deleteEntryFromEs(id);
+            } catch (Exception e) {
+                log.error("异步同步记录时发生异常: {}", e.getMessage(), e);
+            }
+        });
+    }
+
+    public void deleteEntryFromEs(String id) {
+        try {
+            this.deleteDocument(Long.parseLong(id));
+        } catch (Exception e) {
+            // 记录日志，但不影响主流程
+            System.err.println("同步删除ES失败: " + e.getMessage());
+        }
+    }
+
+
 }

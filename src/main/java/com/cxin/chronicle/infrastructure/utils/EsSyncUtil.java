@@ -24,6 +24,7 @@ public class EsSyncUtil {
     @Resource
     private EntriesMapper entriesMapper;
 
+
     @Resource
     private EntriesRepository entriesRepository;
 
@@ -50,7 +51,7 @@ public class EsSyncUtil {
                 EntriesDocument document = convertToDocument(entry);
                 entriesRepository.save(document);
                 successCount++;
-                
+
                 if (successCount % 100 == 0) {
                     log.info("已同步 {} 条记录", successCount);
                 }
