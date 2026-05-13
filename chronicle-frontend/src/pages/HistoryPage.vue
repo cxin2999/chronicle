@@ -2,7 +2,7 @@
   <div class="history-page mobile-page">
     <!-- 头部：返回 + 年份导航 -->
     <header class="history-page__header page-header">
-      <!-- 返回按钮（iOS 风格） -->
+      <!-- 返回按钮 -->
       <button class="history-back-btn" @click="goToRecord">
         <span class="history-back-btn__chevron">‹</span>
         <span class="history-back-btn__label">记录</span>

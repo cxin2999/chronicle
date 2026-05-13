@@ -5,12 +5,6 @@ declare namespace API {
     message?: string
   }
 
-  type BaseResponseInteger = {
-    code?: number
-    data?: number
-    message?: string
-  }
-
   type BaseResponseListEntriesVo = {
     code?: number
     data?: EntriesVo[]
