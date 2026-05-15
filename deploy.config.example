@@ -1,0 +1,21 @@
+# 部署配置文件示例
+# 复制此文件为 deploy.config 并填写真实值
+# cp deploy.config.example deploy.config
+
+# 服务器IP地址
+SERVER_IP="your-server-ip"
+
+# SSH用户名
+SSH_USER="ubuntu"
+
+# SSH端口
+SSH_PORT="22"
+
+# 前端部署目录
+FRONTEND_DEPLOY_DIR="/opt/1panel/www/sites/xxxx/index"
+
+# 后端部署目录
+BACKEND_DEPLOY_DIR="/project/xxx"
+
+LOCAL_FRONTEND_DIST="bafenbao-frontend/dist"
+JAR_NAME="ba-fen-bao-0.0.1-SNAPSHOT.jar"

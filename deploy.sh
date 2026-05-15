@@ -1,23 +1,9 @@
 #!/usr/bin/env bash
 # Chronicle 快速部署脚本
 # 用法: ./deploy.sh
-# 前提: 本机已配置 SSH 密钥登录，ubuntu 用户在服务器上具有 sudo NOPASSWD 权限
+# 前提: 本机已配置 SSH 密钥登录,ubuntu 用户在服务器上具有 sudo NOPASSWD 权限
 
 set -euo pipefail
-
-# ============================================================
-# 可配置项 — 根据实际情况修改以下变量
-# ============================================================
-SERVER_IP="106.55.224.189"
-SSH_USER="ubuntu"
-SSH_PORT="22"
-FRONTEND_DEPLOY_DIR="/opt/1panel/www/sites/chronicle/index"
-BACKEND_DEPLOY_DIR="/project/chronicle-backend"
-LOCAL_FRONTEND_DIST="chronicle-frontend/dist"
-JAR_NAME="chronicle-0.0.1-SNAPSHOT.jar"
-LOCAL_JAR="target/${JAR_NAME}"
-BACKUP_KEEP=5
-# ============================================================
 
 # 颜色定义
 RED='\033[0;31m'
@@ -31,6 +17,29 @@ log_warn()  { echo -e "${YELLOW}[WARN ][$(date '+%Y-%m-%d %H:%M:%S')]${NC} $*"; 
 log_error() { echo -e "${RED}[ERROR][$(date '+%Y-%m-%d %H:%M:%S')]${NC} $*" >&2; }
 
 trap 'log_error "脚本在第 ${LINENO} 行发生错误，已终止执行。"' ERR
+
+# ============================================================
+# 加载配置文件
+# ============================================================
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "${SCRIPT_DIR}/deploy.config" ]]; then
+  source "${SCRIPT_DIR}/deploy.config"
+  log_info "已加载配置文件: deploy.config"
+else
+  log_error "未找到配置文件 deploy.config"
+  log_error "请复制 deploy.config.example 为 deploy.config 并修改配置"
+  log_error "命令: cp deploy.config.example deploy.config"
+  exit 1
+fi
+
+# ============================================================
+# 可配置项 — 从 deploy.config 文件加载
+# ============================================================
+# 注意: 这些变量必须从 deploy.config 文件中加载
+# 如果配置文件中未设置,脚本将在启动时报错退出
+LOCAL_JAR="target/${JAR_NAME}"
+BACKUP_KEEP=5
+# ============================================================
 
 # ============================================================
 # 检查本地依赖
@@ -225,15 +234,14 @@ EOF
 # 主流程
 # ============================================================
 main() {
-  # 切换到脚本所在目录，确保相对路径正确
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # 切换到脚本所在目录,确保相对路径正确
   cd "${SCRIPT_DIR}"
 
   check_deps
 
   echo ""
   echo -e "${BLUE}================================================${NC}"
-  echo -e "${BLUE}         Chronicle 快速部署脚本 v               ${NC}"
+  echo -e "${BLUE}                     快速部署脚本               ${NC}"
   echo -e "${BLUE}  服务器: ${SERVER_IP}   用户: ${SSH_USER}      ${NC}"
   echo -e "${BLUE}================================================${NC}"
   echo ""
