@@ -630,8 +630,26 @@ loadInitial()
 }
 
 .edit-popup__field {
+  background: rgba(120, 120, 128, 0.05);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--color-border-light) !important;
+  transition:
+    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.edit-popup__field:hover {
+  border-color: var(--color-border) !important;
   background: rgba(120, 120, 128, 0.07);
-  border-radius: var(--radius-lg);
+}
+
+.edit-popup__field:focus-within {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, transparent) !important;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--color-primary) 7%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .edit-popup__field :deep(.van-field__control::placeholder) {

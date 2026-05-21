@@ -1,61 +1,79 @@
 <template>
   <div id="userLoginPage">
-    <div class="auth-container">
-      <div class="form-section">
-        <div class="form-card">
-          <h2 class="form-title">欢迎回来</h2>
-          <p class="form-subtitle">登录您的账号</p>
-
-          <van-form @submit="handleSubmit" class="login-form">
-            <van-field
-              v-model="formState.userAccount"
-              name="userAccount"
-              placeholder="请输入账号"
-              :rules="[{ required: true, message: '请输入账号' }]"
-              size="large"
-              class="form-input"
-            >
-              <template #left-icon>
-                <van-icon name="user" class="input-icon" />
-              </template>
-            </van-field>
-            <van-field
-              v-model="formState.userPassword"
-              type="password"
-              name="userPassword"
-              placeholder="请输入密码"
-              :rules="[
-                { required: true, message: '请输入密码' },
-                { pattern: /^.{8,}$/, message: '密码长度不能小于 8 位' },
-              ]"
-              size="large"
-              class="form-input"
-            >
-              <template #left-icon>
-                <van-icon name="lock" class="input-icon" />
-              </template>
-            </van-field>
-
-            <div style="margin: 16px 0">
-              <van-button
-                round
-                block
-                type="primary"
-                native-type="submit"
-                size="large"
-                class="submit-btn"
-              >
-                登录
-              </van-button>
+    <div class="auth-wrapper">
+      <div class="auth-container">
+        <!-- 左侧品牌区域 -->
+        <div class="brand-section">
+          <div class="brand-bg"></div>
+          <div class="brand-content">
+            <div class="brand-logo">
+              <img src="@/assets/logo.png" alt="Logo" class="logo-img" />
             </div>
-          </van-form>
+            <h1 class="brand-title">Chronicle</h1>
+            <p class="brand-subtitle">沉淀思考 量化行动</p>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-card">
+            <h2 class="form-title">欢迎回来</h2>
+            <p class="form-subtitle">登录您的账号</p>
 
-          <div class="form-footer">
-            <span class="footer-text">还没有账号？</span>
-            <RouterLink to="/user/register" class="register-link">立即注册</RouterLink>
+            <van-form @submit="handleSubmit" class="login-form">
+              <van-field
+                v-model="formState.userAccount"
+                name="userAccount"
+                placeholder="请输入账号"
+                :rules="[{ required: true, message: '请输入账号' }]"
+                size="large"
+                class="form-input"
+              >
+                <template #left-icon>
+                  <van-icon name="user" class="input-icon" />
+                </template>
+              </van-field>
+              <van-field
+                v-model="formState.userPassword"
+                type="password"
+                name="userPassword"
+                placeholder="请输入密码"
+                :rules="[
+                  { required: true, message: '请输入密码' },
+                  { pattern: /^.{8,}$/, message: '密码长度不能小于 8 位' },
+                ]"
+                size="large"
+                class="form-input"
+              >
+                <template #left-icon>
+                  <van-icon name="lock" class="input-icon" />
+                </template>
+              </van-field>
+
+              <div style="margin: 16px 0">
+                <van-button
+                  round
+                  block
+                  type="primary"
+                  native-type="submit"
+                  size="large"
+                  class="submit-btn"
+                >
+                  登录
+                </van-button>
+              </div>
+            </van-form>
+
+            <div class="form-footer">
+              <span class="footer-text">还没有账号？</span>
+              <RouterLink to="/user/register" class="register-link">立即注册</RouterLink>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ICP 备案信息 -->
+    <div class="icp-footer">
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">粤ICP备2026037954号-2</a>
     </div>
   </div>
 </template>
@@ -97,12 +115,18 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 
 <style scoped>
 #userLoginPage {
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 40px);
   background: var(--color-background-secondary);
+  display: flex;
+  flex-direction: column;
+  padding: 40px 20px 0;
+}
+
+.auth-wrapper {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
 }
 
 .auth-container {
@@ -251,28 +275,66 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 
 .form-input {
-  border-radius: var(--radius-lg);
-  border-color: var(--color-border);
-  transition: all var(--transition-fast);
+  margin-bottom: 2px;
+  border-radius: var(--radius-xl) !important;
+  background: #fff !important;
+  transition:
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.form-input:hover {
-  border-color: var(--color-primary-light);
+.form-input :deep(.van-field__body) {
+  border: 1.5px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  background: rgba(120, 120, 128, 0.025);
+  padding: 2px 0;
+  transition:
+    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.form-input:hover :deep(.van-field__body) {
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  background: rgba(120, 120, 128, 0.04);
 }
 
 .form-input:focus,
 .form-input:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  box-shadow: none !important;
+}
+
+.form-input:focus-within :deep(.van-field__body) {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background: #fff;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--color-primary) 7%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .form-input :deep(.van-field__control) {
-  padding: 12px 14px;
+  padding: 9px 15px;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+}
+
+.form-input :deep(.van-field__control::placeholder) {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.form-input :deep(.van-field__left-icon) {
+  margin-left: 4px;
 }
 
 .input-icon {
   color: var(--color-text-muted);
-  font-size: 16px;
+  font-size: 17px;
+  transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.form-input:focus-within :deep(.van-field__left-icon) .input-icon {
+  color: var(--color-primary);
 }
 
 .submit-btn {
@@ -344,5 +406,18 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   .form-title {
     font-size: 22px;
   }
+}
+
+/* ICP 备案 */
+.icp-footer {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.icp-footer a {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
 }
 </style>

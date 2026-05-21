@@ -47,6 +47,11 @@
         退出登录
       </van-button>
     </div>
+
+    <!-- ICP 备案信息 -->
+    <div class="profile-page__icp">
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">粤ICP备2026037954号-2</a>
+    </div>
   </div>
 </template>
 
@@ -143,8 +148,22 @@ async function handleLogout() {
 /* 退出按钮：固定在底部，安全区适配 */
 .profile-page__logout {
   flex-shrink: 0;
-  padding: 0.75rem 1rem calc(0.875rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.75rem 1rem 0.875rem;
   border-top: 1px solid var(--color-border-light);
   background: var(--color-background-tertiary);
+}
+
+/* ICP 备案 */
+.profile-page__icp {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: var(--color-background-tertiary);
+}
+
+.profile-page__icp a {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
 }
 </style>
